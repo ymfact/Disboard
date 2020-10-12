@@ -12,6 +12,7 @@ class Echo : IGame
     SendType Send { get; }
     public Echo(GameInitializer initializer) => Send = initializer.Send;
     public Task Start() => Send("`Echo Started.`");
+    public Task OnGroup(User.IdType authorId, string message) => Send(message);
 }
 
 class Program
