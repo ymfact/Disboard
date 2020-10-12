@@ -38,7 +38,7 @@ namespace Disboard
             await Task.Delay(-1);
         }
 
-        public async Task NewGame(DiscordChannel channel)
+        public Task NewGame(DiscordChannel channel)
         {
             var guild = channel.Guild;
             var discordMembers = guild.Members;
@@ -46,21 +46,26 @@ namespace Disboard
             var users = gameInitializer.Users;
             IGame game = _newGame(gameInitializer);
 
-            OnFinish(channel.Id);
-            if(game is IGameUsesDM)
+            lock (game)
             {
-                var gameUsesDM = game as IGameUsesDM;
-                foreach (var user in users)
+                OnFinish(channel.Id);
+                if (game is IGameUsesDM)
                 {
-                    if (_gamesByUsers.ContainsKey(user.Id)){
-                        await user.DM("`기존에 진행중이던 게임이 있습니다. 기존 게임에 다시 참여하려면 기존 채널에서 BOT restoredm을 입력하세요.`");
-                        _gamesByUsers.Remove(user.Id);
+                    var gameUsesDM = game as IGameUsesDM;
+                    foreach (var user in users)
+                    {
+                        if (_gamesByUsers.ContainsKey(user.Id))
+                        {
+                            user.DM("`기존에 진행중이던 게임이 있습니다. 기존 게임에 다시 참여하려면 기존 채널에서 BOT restoredm을 입력하세요.`").GetAwaiter().GetResult();
+                            _gamesByUsers.Remove(user.Id);
+                        }
+                        _gamesByUsers.Add(user.Id, gameUsesDM!);
                     }
-                    _gamesByUsers.Add(user.Id, gameUsesDM!);
                 }
+                _games.Add(channel.Id, (game, users));
+                game.Start().GetAwaiter().GetResult();
             }
-            _games.Add(channel.Id, (game, users));
-            await game.Start();
+            return Task.CompletedTask;
         }
 
         public void OnFinish(ChannelIdType channelId)
@@ -91,23 +96,22 @@ namespace Disboard
             Task.Run(() => Task.WhenAll(tasks).GetAwaiter().GetResult());
             return Task.CompletedTask;
         }
-        private async Task GuildMemberAdded(GuildMemberAddEventArgs _)
+        private Task GuildMemberAdded(GuildMemberAddEventArgs _)
         {
             var defaultChannel = _.Guild.GetDefaultChannel();
             if (_.Guild.Channels.Any(_ => _games.ContainsKey(_.Id)))
             {
-                await defaultChannel.SendMessageAsync("`게임이 진행중입니다. 게임에 참여하려면 BOT restart로 게임을 다시 시작해야 합니다.`");
+                return defaultChannel.SendMessageAsync("`게임이 진행중입니다. 게임에 참여하려면 BOT restart로 게임을 다시 시작해야 합니다.`");
             }
             else
             {
-                await PrintDesc(defaultChannel);
+                return PrintDesc(defaultChannel);
             }
         }
 
-        private async Task GuildCreated(GuildCreateEventArgs _)
-        {
-            await PrintDesc(_.Guild.GetDefaultChannel());
-        }
+        private Task GuildCreated(GuildCreateEventArgs _)
+            => PrintDesc(_.Guild.GetDefaultChannel());
+
         private Task GuildDeleted(GuildDeleteEventArgs _)
         {
             foreach (DiscordChannel channel in _.Guild.Channels)
@@ -142,7 +146,10 @@ namespace Disboard
                 IGameUsesDM? game = _gamesByUsers.GetValueOrDefault(userId);
                 if (game is IGameUsesDM)
                 {
-                    await game.OnDM(userId, content, _ => channel.SendMessageAsync(_));
+                    lock (game)
+                    {
+                        game.OnDM(userId, content, _ => channel.SendMessageAsync(_)).GetAwaiter().GetResult();
+                    }
                 }
                 else
                 {
@@ -221,7 +228,10 @@ namespace Disboard
                 {
                     if (game != null)
                     {
-                        await game.OnGroup(userId, content);
+                        lock (game)
+                        {
+                            game.OnGroup(userId, content).GetAwaiter().GetResult();
+                        }
                     }
                 }
             }
