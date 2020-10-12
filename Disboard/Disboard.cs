@@ -2,6 +2,7 @@
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,8 +13,8 @@ namespace Disboard
     public sealed class Disboard
     {
         private readonly Func<GameInitializer, IGame> _newGame;
-        private readonly Dictionary<ChannelIdType, (IGame, IEnumerable<User>)> _games = new Dictionary<ChannelIdType, (IGame, IEnumerable<User>)>();
-        private readonly Dictionary<User.IdType, IGameUsesDM> _gamesByUsers = new Dictionary<User.IdType, IGameUsesDM>();
+        private readonly ConcurrentDictionary<ChannelIdType, (IGame, IEnumerable<User>)> _games = new ConcurrentDictionary<ChannelIdType, (IGame, IEnumerable<User>)>();
+        private readonly ConcurrentDictionary<User.IdType, IGameUsesDM> _gamesByUsers = new ConcurrentDictionary<User.IdType, IGameUsesDM>();
 
         public Disboard(Func<GameInitializer, IGame> newGame)
         {
@@ -57,12 +58,12 @@ namespace Disboard
                         if (_gamesByUsers.ContainsKey(user.Id))
                         {
                             user.DM("`기존에 진행중이던 게임이 있습니다. 기존 게임에 다시 참여하려면 기존 채널에서 BOT restoredm을 입력하세요.`").GetAwaiter().GetResult();
-                            _gamesByUsers.Remove(user.Id);
+                            _gamesByUsers.Remove(user.Id, out _);
                         }
-                        _gamesByUsers.Add(user.Id, gameUsesDM!);
+                        _gamesByUsers.TryAdd(user.Id, gameUsesDM!);
                     }
                 }
-                _games.Add(channel.Id, (game, users));
+                _games.TryAdd(channel.Id, (game, users));
                 game.Start().GetAwaiter().GetResult();
             }
             return Task.CompletedTask;
@@ -75,8 +76,8 @@ namespace Disboard
                 var (game, users) = _games[channelId];
                 var userIds = _gamesByUsers.Where(_ => _.Value == game).Select(_ => _.Key);
                 foreach (var userId in userIds)
-                    _gamesByUsers.Remove(userId);
-                _games.Remove(channelId);
+                    _gamesByUsers.Remove(userId, out _);
+                _games.Remove(channelId, out _);
             }
         }
 
@@ -112,10 +113,10 @@ namespace Disboard
         private Task GuildCreated(GuildCreateEventArgs _)
             => PrintDesc(_.Guild.GetDefaultChannel());
 
-        private Task GuildDeleted(GuildDeleteEventArgs _)
+        private Task GuildDeleted(GuildDeleteEventArgs __)
         {
-            foreach (DiscordChannel channel in _.Guild.Channels)
-                _games.Remove(channel.Id);
+            foreach (DiscordChannel channel in __.Guild.Channels)
+                _games.Remove(channel.Id, out _);
             return Task.CompletedTask;
         }
         private IEnumerable<DiscordChannel> GetDebugChannels(DiscordGuild guild)
@@ -124,12 +125,12 @@ namespace Disboard
         private Task PrintDesc(DiscordChannel channel)
             => channel.SendMessageAsync("`BOT start로 게임을 시작할 수 있습니다.`");
 
-        private async Task MessageCreated(MessageCreateEventArgs _)
+        private async Task MessageCreated(MessageCreateEventArgs __)
         {
-            var channel = _.Channel;
-            var author = _.Author;
+            var channel = __.Channel;
+            var author = __.Author;
             var userId = author.Id;
-            var message = _.Message;
+            var message = __.Message;
             var content = message.Content;
 
             if (author.IsBot)
@@ -158,7 +159,7 @@ namespace Disboard
             }
             if(channel.Type == ChannelType.Text || channel.Type == ChannelType.Group)
             {
-                var guild = _.Guild;
+                var guild = __.Guild;
                 var (game, users) = _games.GetValueOrDefault(channel.Id);
                 string[] split = content.Split(" ");
                 if (split.Length > 0 && split[0].ToLower() == "bot")
@@ -208,8 +209,8 @@ namespace Disboard
                                 }
                                 else
                                 {
-                                    _gamesByUsers.Remove(userId);
-                                    _gamesByUsers.Add(userId, gameUsesDM!);
+                                    _gamesByUsers.Remove(userId, out _);
+                                    _gamesByUsers.TryAdd(userId, gameUsesDM!);
                                     await dMChannel.SendMessageAsync("`복원되었습니다. 이제부터 이곳에 입력하는 메시지는 해당 채널의 게임으로 전달됩니다.`");
                                 }
                             }
