@@ -1,5 +1,4 @@
-﻿using Discord;
-using Discord.Net.WebSockets;
+﻿using DSharpPlus.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,12 +10,12 @@ namespace Disboard
     public sealed class GameInitializer
     {
         public delegate Task SendType(string message);
-        public GameInitializer(IMessageChannel channel, ulong guildId, IEnumerable<IUser> users, Action onFinish)
+        public GameInitializer(DiscordChannel channel, IReadOnlyList<DiscordMember> discordMembers, Action<ulong> onFinish)
         {
             Send = (_) => channel.SendMessageAsync(_);
-            Users = users.Select(_ => new User(_));
-            OnFinish = onFinish;
-            GroupURL = $"https://discord.com/channels/{guildId}/{channel.Id}";
+            Users = discordMembers.Where(_ => _.IsBot == false).Select(_ => new User(_));
+            OnFinish = () => onFinish(channel.Id);
+            GroupURL = $"https://discord.com/channels/{channel.GuildId}/{channel.Id}";
         }
         public SendType Send { get; }
         public IEnumerable<User> Users { get; }
@@ -37,13 +36,13 @@ namespace Disboard
             public bool Equals(IdType? other) => other != null && _raw == other._raw;
             public override int GetHashCode() => HashCode.Combine(_raw);
         }
-        public User(IUser user)
+        public User(DiscordMember member)
         {
-            var dMChannel = user.GetOrCreateDMChannelAsync().Result;
+            var dMChannel = member.CreateDmChannelAsync().Result;
 
-            Id = user.Id;
-            Name = user.Username;
-            Mention = user.Mention;
+            Id = member.Id;
+            Name = member.Username;
+            Mention = member.Mention;
             DM = _ => dMChannel.SendMessageAsync(_);
             DMURL = "https://discord.com/channels/@me/{dMChannel.Id}";
         }

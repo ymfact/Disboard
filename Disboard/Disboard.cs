@@ -1,9 +1,9 @@
-﻿using Discord;
-using Discord.WebSocket;
+﻿using DSharpPlus;
+using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
 
 namespace Disboard
@@ -11,7 +11,6 @@ namespace Disboard
     using ChannelIdType = UInt64;
     public sealed class Disboard
     {
-        private readonly DiscordSocketClient _client;
         private readonly Func<GameInitializer, IGame> _newGame;
         private readonly Dictionary<ChannelIdType, (IGame, IEnumerable<User>)> _games = new Dictionary<ChannelIdType, (IGame, IEnumerable<User>)>();
         private readonly Dictionary<User.IdType, IGameUsesDM> _gamesByUsers = new Dictionary<User.IdType, IGameUsesDM>();
@@ -19,40 +18,35 @@ namespace Disboard
         public Disboard(Func<GameInitializer, IGame> newGame)
         {
             _newGame = newGame;
-
-            var config = new DiscordSocketConfig() { HandlerTimeout = null };
-            _client = new DiscordSocketClient(config);
         }
 
         public async Task Run(string token)
         {
-            _client.Log += Log;
-            _client.JoinedGuild += JoinedGuild;
-            _client.LeftGuild += LeftGuild;
-            _client.Ready += Ready;
-            _client.UserJoined += UserJoined;
-            _client.MessageReceived += MessageReceived;
+            DiscordClient discord = new DiscordClient(new DiscordConfiguration
+            {
+                Token = token,
+                TokenType = TokenType.Bot
+            });
+            discord.DebugLogger.LogMessageReceived += LogMessageReceived;
+            discord.Ready += Ready;
+            discord.GuildCreated += GuildCreated;
+            discord.GuildDeleted += GuildDeleted;
+            discord.GuildMemberAdded += GuildMemberAdded;
+            discord.MessageCreated += MessageCreated;
 
-            // Remember to keep token private or to read it from an 
-            // external source! In this case, we are reading the token 
-            // from an environment variable. If you do not know how to set-up
-            // environment variables, you may find more information on the 
-            // Internet or by using other methods such as reading from 
-            // a configuration.
-            await _client.LoginAsync(TokenType.Bot, token);
-            await _client.StartAsync();
-
-            // Block this task until the program is closed.
+            await discord.ConnectAsync();
             await Task.Delay(-1);
         }
 
-        public async Task NewGame(IMessageChannel channel, ulong guildId)
+        public async Task NewGame(DiscordChannel channel)
         {
-            var discordUsers = (await channel.GetUsersAsync().FlattenAsync()).Where(_ => _.IsBot == false);
-            var gameInitializer = new GameInitializer(channel, guildId, discordUsers, () => OnFinish(channel.Id));
+            var guild = channel.Guild;
+            var discordMembers = guild.Members;
+            var gameInitializer = new GameInitializer(channel, discordMembers, OnFinish);
             var users = gameInitializer.Users;
             IGame game = _newGame(gameInitializer);
 
+            OnFinish(channel.Id);
             if(game is IGameUsesDM)
             {
                 var gameUsesDM = game as IGameUsesDM;
@@ -65,12 +59,8 @@ namespace Disboard
                     _gamesByUsers.Add(user.Id, gameUsesDM!);
                 }
             }
-            _games.Remove(channel.Id);
             _games.Add(channel.Id, (game, users));
-            using (channel.EnterTypingState())
-            {
-                await game.Start();
-            }
+            await game.Start();
         }
 
         public void OnFinish(ChannelIdType channelId)
@@ -85,28 +75,26 @@ namespace Disboard
             }
         }
 
-        private Task Log(LogMessage msg)
+        private void LogMessageReceived(object? sender, DebugLogMessageEventArgs _)
         {
-            Console.WriteLine(msg.ToString());
-            return Task.CompletedTask;
+            Console.WriteLine(_.Message);
         }
 
-        private async Task Ready()
+        private Task Ready(ReadyEventArgs _)
         {
-            var channels = _client.Guilds.SelectMany(guild => GetDebugChannles(guild).Result.Select(channel => (guild.Id, channel)));
-            var tasks = channels.Select(async _ =>
+            var channels = _.Client.Guilds.Values.SelectMany(_ => GetDebugChannels(_));
+            var tasks = channels.Select(async channel =>
             {
-                var (guildId, channel) = _;
                 await channel.SendMessageAsync("`Disboard started.`");
-                await NewGame(channel, guildId);
+                await NewGame(channel);
             });
-            await Task.WhenAll(tasks);
+            Task.Run(() => Task.WhenAll(tasks).GetAwaiter().GetResult());
+            return Task.CompletedTask;
         }
-        private async Task UserJoined(IGuildUser user)
+        private async Task GuildMemberAdded(GuildMemberAddEventArgs _)
         {
-            var channels = await user.Guild.GetTextChannelsAsync();
-            var defaultChannel = await user.Guild.GetDefaultChannelAsync();
-            if (channels.Any(_ => _games.ContainsKey(_.Id)))
+            var defaultChannel = _.Guild.GetDefaultChannel();
+            if (_.Guild.Channels.Any(_ => _games.ContainsKey(_.Id)))
             {
                 await defaultChannel.SendMessageAsync("`게임이 진행중입니다. 게임에 참여하려면 BOT restart로 게임을 다시 시작해야 합니다.`");
             }
@@ -116,68 +104,64 @@ namespace Disboard
             }
         }
 
-        private async Task JoinedGuild(IGuild guild)
+        private async Task GuildCreated(GuildCreateEventArgs _)
         {
-            var channel = await guild.GetDefaultChannelAsync();
-            await PrintDesc(channel);
+            await PrintDesc(_.Guild.GetDefaultChannel());
         }
-        private async Task LeftGuild(IGuild guild)
+        private Task GuildDeleted(GuildDeleteEventArgs _)
         {
-            foreach (IChannel channel in await guild.GetTextChannelsAsync())
-            {
+            foreach (DiscordChannel channel in _.Guild.Channels)
                 _games.Remove(channel.Id);
-            }
+            return Task.CompletedTask;
         }
-        private async Task<IEnumerable<IMessageChannel>> GetDebugChannles(IGuild guild)
-            => (await guild.GetTextChannelsAsync()).Where(_ => _.Topic != null && _.Topic.ToLower().Contains("debug"));
+        private IEnumerable<DiscordChannel> GetDebugChannels(DiscordGuild guild)
+            => guild.GetChannelsAsync().Result.Where(_ => _.Topic != null && _.Topic.ToLower().Contains("debug"));
 
-        private async Task PrintDesc(IMessageChannel channel)
-            => await channel.SendMessageAsync("`BOT start로 게임을 시작할 수 있습니다.`");
+        private Task PrintDesc(DiscordChannel channel)
+            => channel.SendMessageAsync("`BOT start로 게임을 시작할 수 있습니다.`");
 
-        private async Task MessageReceived(SocketMessage message)
+        private async Task MessageCreated(MessageCreateEventArgs _)
         {
-            if (message.Author.IsBot)
+            var channel = _.Channel;
+            var author = _.Author;
+            var userId = author.Id;
+            var message = _.Message;
+            var content = message.Content;
+
+            if (author.IsBot)
             {
                 return;
             }
-            if (message.Content.Length == 0)
+            if(message.MessageType != MessageType.Default)
             {
                 return;
             }
 
-            var userId = message.Author.Id;
-            var channel = message.Channel;
-            var content = message.Content;
-            if(channel is IDMChannel)
+            if (channel.Type == ChannelType.Private)
             {
                 IGameUsesDM? game = _gamesByUsers.GetValueOrDefault(userId);
                 if (game is IGameUsesDM)
                 {
-                    if(game.AcceptsOnDM(userId, content))
-                    {
-                        using (channel.EnterTypingState())
-                        {
-                            await game.OnDM(userId, content, _ => channel.SendMessageAsync(_));
-                        }
-                    }
+                    await game.OnDM(userId, content, _ => channel.SendMessageAsync(_));
                 }
                 else
                 {
                     await channel.SendMessageAsync("`진행중인 게임이 없습니다.`");
                 }
             }
-            else
+            if(channel.Type == ChannelType.Text || channel.Type == ChannelType.Group)
             {
+                var guild = _.Guild;
                 var (game, users) = _games.GetValueOrDefault(channel.Id);
                 string[] split = content.Split(" ");
                 if (split.Length > 0 && split[0].ToLower() == "bot")
                 {
-                    ulong guildId = message.Reference.GuildId.Value;
+                    ulong guildId = guild.Id;
                     if (split.Length > 1 && split[1].ToLower() == "start")
                     {
                         if (game == null)
                         {
-                            await NewGame(channel, guildId);
+                            await NewGame(channel);
                         }
                         else
                         {
@@ -192,7 +176,7 @@ namespace Disboard
                         }
                         else
                         {
-                            await NewGame(channel, guildId);
+                            await NewGame(channel);
                         }
                     }
                     else if (split.Length > 1 && split[1].ToLower() == "restoredm")
@@ -210,7 +194,7 @@ namespace Disboard
                             if (users.Any(_ => _.Id == userId))
                             {
                                 var gameUsesDM = game as IGameUsesDM;
-                                var dMChannel = message.Author.GetOrCreateDMChannelAsync().Result;
+                                var dMChannel = await guild.GetMemberAsync(userId).Result.CreateDmChannelAsync();
                                 if (_gamesByUsers.GetValueOrDefault(userId) == game)
                                 {
                                     await dMChannel.SendMessageAsync("`이곳에 입력하는 메시지는 해당 채널의 게임으로 전달됩니다.`");
@@ -237,13 +221,7 @@ namespace Disboard
                 {
                     if (game != null)
                     {
-                        if(game.AcceptsOnGroup(userId, content))
-                        {
-                            using (channel.EnterTypingState())
-                            {
-                                await game.OnGroup(userId, content);
-                            }
-                        }
+                        await game.OnGroup(userId, content);
                     }
                 }
             }

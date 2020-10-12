@@ -47,23 +47,6 @@ namespace Yahtzee
             await StartTurn();
         }
 
-        public bool AcceptsOnGroup(User.IdType authorId, string message)
-        {
-            if (authorId == CurrentUser?.Id)
-            {
-                var split = message.Split();
-                if (split.Length > 0 && split[0].ToLower() == "r")
-                {
-                    return true;
-                }
-                if (split.Length > 0 && split[0].ToLower() == "s")
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         public async Task OnGroup(User.IdType authorId, string message)
         {
             if (authorId == CurrentUser?.Id)
