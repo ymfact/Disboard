@@ -140,6 +140,10 @@ namespace Disboard
             {
                 return;
             }
+            if (message.Content.Length == 0)
+            {
+                return;
+            }
 
             var userId = message.Author.Id;
             var channel = message.Channel;
