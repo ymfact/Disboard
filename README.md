@@ -12,7 +12,6 @@ class Echo : IGame
     SendType Send { get; }
     public Echo(GameInitializer initializer) => Send = initializer.Send;
     public Task Start() => Send("`Echo Started.`");
-    public Task Start() => Task.CompletedTask;
 }
 
 class Program
