@@ -1,12 +1,10 @@
 ﻿using Disboard;
 using System.Threading.Tasks;
-using static Disboard.GameInitializer;
 
-class Echo : IGameUsesDM
+class Echo : IGame
 {
     SendType Send { get; }
-    public Echo(GameInitializer initializer) => Send = initializer.Send;
-    public Task OnGroup(User.IdType authorId, string message) => Send(message);
+    public Echo(GameInitializeData initializer) => Send = initializer.Send;
     public Task Start() => Send("`Echo Started.`");
-    public Task OnDM(User.IdType authorId, string message, SendType reply) => reply(message);
+    public Task OnGroup(Player player, string message) => Send(message);
 }

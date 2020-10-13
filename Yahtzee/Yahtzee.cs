@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using static Disboard.GameInitializer;
 using static Disboard.Macro;
 
 namespace Yahtzee
@@ -13,11 +12,10 @@ namespace Yahtzee
     {
         private const int NAME_LEN = 16;
         private readonly Random random = new Random();
-        private readonly SendType _send;
-        private readonly IReadOnlyList<User> _users;
+        private readonly IReadOnlyList<Player> _players;
         private readonly Action _onFinish;
-        private readonly IReadOnlyDictionary<User.IdType, IScoreBoard> _scoreBoards;
-        private int _currentUserIndex = 0;
+        private readonly IReadOnlyDictionary<Player, IScoreBoard> _scoreBoards;
+        private int _currentPlayerIndex = 0;
         private int[] _currentDices = { 0, 0, 0, 0, 0 };
         private int _currentRemainReroll = 0;
 
@@ -31,49 +29,50 @@ namespace Yahtzee
             }
         }
 
-        private User? CurrentUser => _currentUserIndex != -1 ? _users[_currentUserIndex] : null;
+        private SendType Send { get; }
 
-        public Yahtzee(GameInitializer initializer)
+        private Player? CurrentPlayer => _currentPlayerIndex != -1 ? _players[_currentPlayerIndex] : null;
+
+        public Yahtzee(GameInitializeData initializer)
         {
-            _send = initializer.Send;
-            _users = initializer.Users.OrderBy(_ => random.Next()).ToList();
+            Send = initializer.Send;
+            _players = initializer.Players.OrderBy(_ => random.Next()).ToList();
             _onFinish = initializer.OnFinish;
-            _scoreBoards = _users.ToDictionary(_ => _.Id, _ => new ScoreBoard() as IScoreBoard);
+            _scoreBoards = _players.ToDictionary(_ => _, _ => new ScoreBoard() as IScoreBoard);
         }
 
         public async Task Start()
         {
-            await _send("`명령어: R 23456, S 4k`");
+            await Send("`명령어: R 23456, S 4k`");
             await StartTurn();
         }
 
-        public async Task OnGroup(User.IdType authorId, string message)
+        public Task OnGroup(Player player, string message)
         {
-            if (authorId == CurrentUser?.Id)
+            if (player == CurrentPlayer)
             {
                 var split = message.Split();
                 if (split.Length > 0 && split[0].ToLower() == "r")
                 {
-                    await Reroll(message);
+                    return Reroll(message);
                 }
-                if (split.Length > 0 && split[0].ToLower() == "s")
+                else if (split.Length > 0 && split[0].ToLower() == "s")
                 {
-                    await Submit(message);
+                    return Submit(message);
                 }
             }
+            return Task.CompletedTask;
         }
-        private async Task Reroll(string message)
+        private Task Reroll(string message)
         {
             if (_currentRemainReroll <= 0)
             {
-                await _send(W("남은 리롤 기회가 없습니다. 점수를 적을 항목을 선택하세요. 예시: S 3k"));
-                return;
+                return Send(W("남은 리롤 기회가 없습니다. 점수를 적을 항목을 선택하세요. 예시: S 3k"));
             }
             var split = message.Split();
             if (split.Length != 2)
             {
-                await _send(W("리롤할 주사위를 입력하세요. 예시: R 334"));
-                return;
+                return Send(W("리롤할 주사위를 입력하세요. 예시: R 334"));
             }
             try
             {
@@ -93,116 +92,112 @@ namespace Yahtzee
                 newDices.AddRange(Enumerable.Range(0, 5 - newDices.Count).Select(_ => random.Next(6) + 1));
                 CurrentDices = newDices.ToArray();
                 _currentRemainReroll -= 1;
-                await PrintTurn();
+                return PrintTurn();
             }
             catch (System.FormatException)
             {
-                await _send(W("리롤할 주사위를 다시 입력하세요. 예시: R 334"));
-                return;
+                return Send(W("리롤할 주사위를 다시 입력하세요. 예시: R 334"));
             }
         }
-        private async Task Submit(string message)
+        private Task Submit(string message)
         {
-            Debug.Assert(CurrentUser != null);
+            Debug.Assert(CurrentPlayer != null);
 
             var split = message.Split();
-            var scoreBoard = _scoreBoards[CurrentUser.Id];
+            var scoreBoard = _scoreBoards[CurrentPlayer];
             if (split.Length != 2)
             {
-                await _send(W("이니셜을 입력하세요.예시: S 3k"));
-                return;
+                return Send(W("이니셜을 입력하세요.예시: S 3k"));
             }
             var initial = split[1];
             try
             {
                 scoreBoard.Submit(initial, CurrentDices);
-                await ProceedAndStartTurn();
+                return ProceedAndStartTurn();
             }
             catch (System.InvalidOperationException)
             {
-                await _send(W("이미 점수를 채운 항목입니다."));
-                return;
+                return Send(W("이미 점수를 채운 항목입니다."));
             }
             catch (CommandNotFoundException)
             {
-                await _send(W("올바른 이니셜을 입력하세요. 예시: S 3k"));
-                return;
+                return Send(W("올바른 이니셜을 입력하세요. 예시: S 3k"));
             }
         }
         private async Task ProceedAndStartTurn()
         {
             if (_scoreBoards.Values.All(_ => _.Places.Values.All(_ => _.IsOpen == false)))
             {
-                _currentUserIndex = -1;
+                _currentPlayerIndex = -1;
                 await PrintBoard();
                 var highestScore = _scoreBoards.Values.Select(_ => _.TotalScore).OrderByDescending(_ => _).First();
-                var winners = _users.Where(_ => _scoreBoards[_.Id].TotalScore == highestScore).Select(_ => _.Name);
+                var winners = _players.Where(_ => _scoreBoards[_].TotalScore == highestScore).Select(_ => _.Name);
                 var winnerString = winners.Count() > 1 ? "Winners: " : "Winner: ";
                 winnerString += string.Join(", ", winners);
-                await _send(W(winnerString));
+                await Send(W(winnerString));
                 _onFinish();
             }
             else
             {
-                _currentUserIndex += 1;
-                if (_currentUserIndex >= _users.Count)
+                _currentPlayerIndex += 1;
+                if (_currentPlayerIndex >= _players.Count)
                 {
-                    _currentUserIndex = 0;
+                    _currentPlayerIndex = 0;
                 }
                 await StartTurn();
             }
         }
-        private async Task StartTurn()
+        private Task StartTurn()
         {
             CurrentDices = Enumerable.Range(0, 5).Select(_ => random.Next(6) + 1).ToArray();
             _currentRemainReroll = 2;
-            await PrintTurn();
+            return PrintTurn();
         }
         private async Task PrintTurn()
         {
-            Debug.Assert(CurrentUser != null);
+            Debug.Assert(CurrentPlayer != null);
 
             await PrintBoard();
 
             var checkTexts = Enumerable.Range(0, 3).Reverse().Select(_ => _ < _currentRemainReroll).Select(_ => _ ? ":arrows_counterclockwise:" : ":ballot_box_with_check:");
             var checkString = string.Join(" ", checkTexts);
-            var turnIndicator = $"{CurrentUser.Mention} {CurrentUser.Name}'s turn, Reroll: " + checkString;
-            await _send(turnIndicator);
+            var turnIndicator = $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn, Reroll: " + checkString;
+            await Send(turnIndicator);
 
             var diceTextTemplates = new List<string> { ":zero:", ":one:", ":two:", ":three:", ":four:", ":five:", ":six:" };
             var diceTexts = CurrentDices.Select(_ => diceTextTemplates[_]);
             var diceString = string.Join(" ", diceTexts);
-            await _send(diceString);
+            await Send(diceString);
         }
-        private async Task PrintBoard()
+        private Task PrintBoard()
         {
             var printString = $"{' ',2} {' ',15} {' ',17}";
-            foreach (User user in _users)
+            foreach (Player player in _players)
             {
-                printString += TrimName(user.Name);
+                printString += TrimName(player.Name);
             }
             var scoreBoard = _scoreBoards.First().Value.Places.Values; // arbitrary one
             foreach (IScorePlace place in scoreBoard)
             {
                 var initial = place.Initial;
                 printString += $"\n{initial,2} {place.Name,15} {place.Desc,17}";
-                foreach (User user in _users)
+                foreach (Player player in _players)
                 {
-                    var placeOfUser = _scoreBoards[user.Id].Places[initial];
+                    var placeOfUser = _scoreBoards[player].Places[initial];
                     var currentScoreString = placeOfUser.CurrentScoreString;
                     var estimateScore = placeOfUser.CalculateScore(CurrentDices);
-                    bool isShowEstimation = user == CurrentUser && placeOfUser.IsOpen;
+                    bool isShowEstimation = player == CurrentPlayer && placeOfUser.IsOpen;
                     var scoreText = isShowEstimation ? $"({estimateScore})" : $"{currentScoreString}";
                     printString += $"{scoreText,NAME_LEN}";
                 }
             }
             printString += $"\n{' ',2} {' ',15} {"TOTAL",17}";
-            foreach (User user in _users)
+            foreach (Player player in _players)
             {
-                printString += $"{_scoreBoards[user.Id].TotalScore,NAME_LEN}";
+                printString += $"{_scoreBoards[player].TotalScore,NAME_LEN}";
             }
 
-            await _send(W(printString));
+            return Send(W(printString));
         }
 
         private string TrimName(string name)

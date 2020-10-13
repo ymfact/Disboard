@@ -9,14 +9,18 @@ using System.Threading.Tasks;
 
 namespace Disboard
 {
+    using GuildIdType = UInt64;
     using ChannelIdType = UInt64;
+    using UserIdType = UInt64;
+
+    public delegate Task SendType(string message);
     public sealed class Disboard
     {
-        private readonly Func<GameInitializer, IGame> _newGame;
-        private readonly ConcurrentDictionary<ChannelIdType, (IGame, IEnumerable<User>)> _games = new ConcurrentDictionary<ChannelIdType, (IGame, IEnumerable<User>)>();
-        private readonly ConcurrentDictionary<User.IdType, IGameUsesDM> _gamesByUsers = new ConcurrentDictionary<User.IdType, IGameUsesDM>();
+        private readonly Func<GameInitializeData, IGame> _newGame;
+        private readonly ConcurrentDictionary<ChannelIdType, (IGame game, IReadOnlyList<PlayerWithId> players)> _games = new ConcurrentDictionary<ChannelIdType, (IGame, IReadOnlyList<PlayerWithId>)>();
+        private readonly ConcurrentDictionary<UserIdType, (IGameUsesDM game, IReadOnlyList<PlayerWithId> players)> _gamesByUsers = new ConcurrentDictionary<UserIdType, (IGameUsesDM, IReadOnlyList<PlayerWithId>)>();
 
-        public Disboard(Func<GameInitializer, IGame> newGame)
+        public Disboard(Func<GameInitializeData, IGame> newGame)
         {
             _newGame = newGame;
         }
@@ -39,44 +43,42 @@ namespace Disboard
             await Task.Delay(-1);
         }
 
-        public Task NewGame(DiscordChannel channel)
+        public async Task NewGame(DiscordChannel channel)
         {
-            var guild = channel.Guild;
-            var discordMembers = guild.Members;
-            var gameInitializer = new GameInitializer(channel, discordMembers, OnFinish);
-            var users = gameInitializer.Users;
+            var members = channel.Guild.Members.Where(_ => !_.IsBot);
+            var dMChannels = await Task.WhenAll(members.Select(_ => _.CreateDmChannelAsync()));
+            var players = members.Zip(dMChannels).Select(_ => new PlayerWithId(_.First, _.Second)).ToList();
+            var gameInitializer = new GameInitializeData(channel, players, OnFinish);
             IGame game = _newGame(gameInitializer);
 
+            OnFinish(channel.Id);
+            if (game is IGameUsesDM)
+            {
+                var gameUsesDM = game as IGameUsesDM;
+                foreach (var player in players)
+                {
+                    if (_gamesByUsers.ContainsKey(player.Id))
+                    {
+                        player.DM("`기존에 진행중이던 게임이 있습니다. 기존 게임에 다시 참여하려면 기존 채널에서 BOT restoredm을 입력하세요.`").GetAwaiter().GetResult();
+                        _gamesByUsers.Remove(player.Id, out _);
+                    }
+                    _gamesByUsers.TryAdd(player.Id, (gameUsesDM!, players));
+                }
+            }
+            _games.TryAdd(channel.Id, (game, players));
             lock (game)
             {
-                OnFinish(channel.Id);
-                if (game is IGameUsesDM)
-                {
-                    var gameUsesDM = game as IGameUsesDM;
-                    foreach (var user in users)
-                    {
-                        if (_gamesByUsers.ContainsKey(user.Id))
-                        {
-                            user.DM("`기존에 진행중이던 게임이 있습니다. 기존 게임에 다시 참여하려면 기존 채널에서 BOT restoredm을 입력하세요.`").GetAwaiter().GetResult();
-                            _gamesByUsers.Remove(user.Id, out _);
-                        }
-                        _gamesByUsers.TryAdd(user.Id, gameUsesDM!);
-                    }
-                }
-                _games.TryAdd(channel.Id, (game, users));
                 game.Start().GetAwaiter().GetResult();
             }
-            return Task.CompletedTask;
         }
 
         public void OnFinish(ChannelIdType channelId)
         {
             if (_games.ContainsKey(channelId))
             {
-                var (game, users) = _games[channelId];
-                var userIds = _gamesByUsers.Where(_ => _.Value == game).Select(_ => _.Key);
-                foreach (var userId in userIds)
-                    _gamesByUsers.Remove(userId, out _);
+                var (_, users) = _games[channelId];
+                foreach (var user in users)
+                    _gamesByUsers.Remove(user.Id, out _);
                 _games.Remove(channelId, out _);
             }
         }
@@ -88,13 +90,15 @@ namespace Disboard
 
         private Task Ready(ReadyEventArgs _)
         {
-            var channels = _.Client.Guilds.Values.SelectMany(_ => GetDebugChannels(_));
-            var tasks = channels.Select(async channel =>
+            Task.Run(async () =>
             {
-                await channel.SendMessageAsync("`Disboard started.`");
-                await NewGame(channel);
+                var channels = (await Task.WhenAll(_.Client.Guilds.Values.Select(_ => GetDebugChannels(_)))).SelectMany(_=>_);
+                await Task.WhenAll(channels.Select(async channel =>
+                {
+                    await channel.SendMessageAsync("`Disboard started.`");
+                    await NewGame(channel);
+                }));
             });
-            Task.Run(() => Task.WhenAll(tasks).GetAwaiter().GetResult());
             return Task.CompletedTask;
         }
         private Task GuildMemberAdded(GuildMemberAddEventArgs _)
@@ -119,8 +123,11 @@ namespace Disboard
                 _games.Remove(channel.Id, out _);
             return Task.CompletedTask;
         }
-        private IEnumerable<DiscordChannel> GetDebugChannels(DiscordGuild guild)
-            => guild.GetChannelsAsync().Result.Where(_ => _.Topic != null && _.Topic.ToLower().Contains("debug"));
+        private async Task<IEnumerable<DiscordChannel>> GetDebugChannels(DiscordGuild guild)
+        {
+            var channels = await guild.GetChannelsAsync();
+            return channels.Where(_ => _.Topic != null && _.Topic.ToLower().Contains("debug"));
+        }
 
         private Task PrintDesc(DiscordChannel channel)
             => channel.SendMessageAsync("`BOT start로 게임을 시작할 수 있습니다.`");
@@ -129,7 +136,7 @@ namespace Disboard
         {
             var channel = __.Channel;
             var author = __.Author;
-            var userId = author.Id;
+            var authorId = author.Id;
             var message = __.Message;
             var content = message.Content;
 
@@ -144,12 +151,16 @@ namespace Disboard
 
             if (channel.Type == ChannelType.Private)
             {
-                IGameUsesDM? game = _gamesByUsers.GetValueOrDefault(userId);
+                var (game, players) = _gamesByUsers.GetValueOrDefault(authorId);
                 if (game is IGameUsesDM)
                 {
-                    lock (game)
+                    var player = players.Where(_ => _.Id == authorId).FirstOrDefault();
+                    if(player != null)
                     {
-                        game.OnDM(userId, content, _ => channel.SendMessageAsync(_)).GetAwaiter().GetResult();
+                        lock (game)
+                        {
+                            game.OnDM(player, content, _ => channel.SendMessageAsync(_)).GetAwaiter().GetResult();
+                        }
                     }
                 }
                 else
@@ -160,11 +171,11 @@ namespace Disboard
             if(channel.Type == ChannelType.Text || channel.Type == ChannelType.Group)
             {
                 var guild = __.Guild;
-                var (game, users) = _games.GetValueOrDefault(channel.Id);
+                var (game, players) = _games.GetValueOrDefault(channel.Id);
                 string[] split = content.Split(" ");
                 if (split.Length > 0 && split[0].ToLower() == "bot")
                 {
-                    ulong guildId = guild.Id;
+                    GuildIdType guildId = guild.Id;
                     if (split.Length > 1 && split[1].ToLower() == "start")
                     {
                         if (game == null)
@@ -199,24 +210,26 @@ namespace Disboard
                         }
                         else
                         {
-                            if (users.Any(_ => _.Id == userId))
+                            var player = players.Where(_ => _.Id == authorId).FirstOrDefault();
+                            if (player == null)
+                            {
+                                await channel.SendMessageAsync("`게임에 참여하고 있지 않습니다. 게임에 참여하려면 BOT restart로 게임을 다시 시작해야 합니다.`");
+                            }
+                            else
                             {
                                 var gameUsesDM = game as IGameUsesDM;
-                                var dMChannel = await guild.GetMemberAsync(userId).Result.CreateDmChannelAsync();
-                                if (_gamesByUsers.GetValueOrDefault(userId) == game)
+                                var member = await guild.GetMemberAsync(authorId);
+                                var dMChannel = await member.CreateDmChannelAsync();
+                                if (_gamesByUsers.GetValueOrDefault(authorId).game == game)
                                 {
                                     await dMChannel.SendMessageAsync("`이곳에 입력하는 메시지는 해당 채널의 게임으로 전달됩니다.`");
                                 }
                                 else
                                 {
-                                    _gamesByUsers.Remove(userId, out _);
-                                    _gamesByUsers.TryAdd(userId, gameUsesDM!);
+                                    _gamesByUsers.Remove(authorId, out _);
+                                    _gamesByUsers.TryAdd(authorId, (gameUsesDM!, players));
                                     await dMChannel.SendMessageAsync("`복원되었습니다. 이제부터 이곳에 입력하는 메시지는 해당 채널의 게임으로 전달됩니다.`");
                                 }
-                            }
-                            else
-                            {
-                                await channel.SendMessageAsync("`게임에 참여하고 있지 않습니다. 게임에 참여하려면 BOT restart로 게임을 다시 시작해야 합니다.`");
                             }
                         }
                     }
@@ -229,9 +242,13 @@ namespace Disboard
                 {
                     if (game != null)
                     {
-                        lock (game)
+                        var player = players.Where(_ => _.Id == authorId).FirstOrDefault();
+                        if(player != null)
                         {
-                            game.OnGroup(userId, content).GetAwaiter().GetResult();
+                            lock (game)
+                            {
+                                game.OnGroup(player, content).GetAwaiter().GetResult();
+                            }
                         }
                     }
                 }

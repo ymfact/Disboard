@@ -5,6 +5,6 @@ namespace Disboard
     public interface IGame
     {
         public Task Start();
-        public Task OnGroup(User.IdType authorId, string message);
+        public Task OnGroup(Player author, string message);
     }
 }
