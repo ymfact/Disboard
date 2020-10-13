@@ -1,6 +1,6 @@
 # Disboard
 
-### Platform of Online Text Board Game using Discord
+### Online Text-Based Board Game Framework using Discord
 
 A simple example:
 
