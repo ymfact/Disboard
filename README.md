@@ -1,6 +1,6 @@
 # Disboard
 
-### Platform of Online Turn-Based Text Board Game using Discord
+### Platform of Online Text Board Game using Discord
 
 A simple example:
 
