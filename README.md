@@ -2,8 +2,7 @@
 
 ### Online Text-Based Board Game Framework using Discord
 
-A simple example:
-
+#### A simple example
 ```csharp
 using Disboard;
 using System.Threading.Tasks;
