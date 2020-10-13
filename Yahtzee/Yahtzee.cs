@@ -129,12 +129,12 @@ namespace Yahtzee
             if (_scoreBoards.Values.All(_ => _.Places.Values.All(_ => _.IsOpen == false)))
             {
                 _currentPlayerIndex = -1;
-                await PrintBoard();
+                var boardString = GetBoardString();
                 var highestScore = _scoreBoards.Values.Select(_ => _.TotalScore).OrderByDescending(_ => _).First();
                 var winners = _players.Where(_ => _scoreBoards[_].TotalScore == highestScore).Select(_ => _.Name);
                 var winnerString = winners.Count() > 1 ? "Winners: " : "Winner: ";
-                winnerString += string.Join(", ", winners);
-                await Send(W(winnerString));
+                winnerString += W(string.Join(", ", winners));
+                await Send(boardString + winnerString);
                 _onFinish();
             }
             else
@@ -157,19 +157,19 @@ namespace Yahtzee
         {
             Debug.Assert(CurrentPlayer != null);
 
-            await PrintBoard();
+            var boardString = GetBoardString();
 
             var checkTexts = Enumerable.Range(0, 3).Reverse().Select(_ => _ < _currentRemainReroll).Select(_ => _ ? ":arrows_counterclockwise:" : ":ballot_box_with_check:");
             var checkString = string.Join(" ", checkTexts);
             var turnIndicator = $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn, Reroll: " + checkString;
-            await Send(turnIndicator);
+            await Send(boardString + turnIndicator);
 
             var diceTextTemplates = new List<string> { ":zero:", ":one:", ":two:", ":three:", ":four:", ":five:", ":six:" };
             var diceTexts = CurrentDices.Select(_ => diceTextTemplates[_]);
             var diceString = string.Join(" ", diceTexts);
             await Send(diceString);
         }
-        private Task PrintBoard()
+        private string GetBoardString()
         {
             var printString = $"{' ',2} {' ',15} {' ',17}";
             foreach (Player player in _players)
@@ -197,7 +197,7 @@ namespace Yahtzee
                 printString += $"{_scoreBoards[player].TotalScore,NAME_LEN}";
             }
 
-            return Send(W(printString));
+            return W(printString);
         }
 
         private string TrimName(string name)
