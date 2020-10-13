@@ -33,11 +33,11 @@ namespace Yahtzee
 
         private Player? CurrentPlayer => _currentPlayerIndex != -1 ? _players[_currentPlayerIndex] : null;
 
-        public Yahtzee(GameInitializeData initializeData)
+        public Yahtzee(GameInitializeData initData)
         {
-            Send = initializeData.Send;
-            _players = initializeData.Players.OrderBy(_ => random.Next()).ToList();
-            _onFinish = initializeData.OnFinish;
+            Send = initData.Send;
+            _players = initData.Players.OrderBy(_ => random.Next()).ToList();
+            _onFinish = initData.OnFinish;
             _scoreBoards = _players.ToDictionary(_ => _, _ => new ScoreBoard() as IScoreBoard);
         }
 
