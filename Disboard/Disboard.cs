@@ -101,7 +101,7 @@ namespace Disboard
                 var channels = (await Task.WhenAll(_.Client.Guilds.Values.Select(_ => GetDebugChannels(_)))).SelectMany(_=>_);
                 await Task.WhenAll(channels.Select(async channel =>
                 {
-                    await channel.SendMessageAsync("`Disboard started.`");
+                    await channel.SendMessageAsync("`Disboard started.`\n`BOT start @참가인원1 @참가인원2... 로 게임을 시작할 수 있습니다.`");
                     DiscordUser[] empty = { };
                     await NewGame(channel, empty);
                 }));
