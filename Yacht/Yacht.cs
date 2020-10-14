@@ -5,6 +5,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using static Disboard.Macro;
 
 namespace Yacht
@@ -175,10 +178,17 @@ namespace Yacht
         Stream GetBoardImage() => Render(() =>
         {
             var scorePlaces = ScoreBoards.Values.First().Places.Values.ToList();
-            var grid = new Disgrid.Disgrid(1 + scorePlaces.Count + 1, 3 + Players.Count);
 
+            int rowCount = 1 + scorePlaces.Count + 1;
+            int columnCount = 3 + Players.Count;
+            var grid = new Disgrid.Disgrid(rowCount, columnCount);
+
+            // 그리드 전역에 스타일을 추가할 수 있습니다.
+            grid.AddStyle<Label>(Label.FontSizeProperty, 18.0);
+
+            // 레이블 각각에도 스타일을 추가할 수 있습니다.
             foreach (var (i, player) in Players.Enumerate())
-                grid.Add(0, 3 + i, player.Name);
+                grid.Add(0, 3 + i, player.Name).FontWeight = FontWeights.Bold;
 
             foreach (var (i, place) in scorePlaces.Enumerate())
             {
@@ -197,10 +207,10 @@ namespace Yacht
                 }
             }
             int totalScoreRow = 1 + scorePlaces.Count;
-            grid.Add(totalScoreRow, 2, "TOTAL");
+            grid.Add(totalScoreRow, 2, "TOTAL").FontWeight = FontWeights.Bold;
 
             foreach (var (i, (player, scoreBoard)) in ScoreBoards.Enumerate())
-                grid.Add(totalScoreRow, 3 + i, scoreBoard.TotalScore.ToString());
+                grid.Add(totalScoreRow, 3 + i, scoreBoard.TotalScore.ToString()).FontWeight = FontWeights.Bold; ;
 
             return grid;
         });
