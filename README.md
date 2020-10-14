@@ -54,7 +54,3 @@ csproj 파일에 `<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">`를 사용하
 
 #### debug
 채널 주제(Topic)에 대소문자 무관 `debug`를 포함시키면 봇을 실행할 때마다 게임이 시작됩니다.
-
-## Todo
-
-- YahtzeeVisual (텍스트 그리드 예제)
