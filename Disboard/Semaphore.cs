@@ -6,20 +6,20 @@ namespace Disboard
 {
     sealed class Semaphore
     {
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
-        public async Task<IDisposable> LockAsync()
+        internal async Task<IDisposable> LockAsync()
         {
             await _semaphore.WaitAsync();
             return new Handler(_semaphore);
         }
 
-        private sealed class Handler : IDisposable
+        sealed class Handler : IDisposable
         {
-            private readonly SemaphoreSlim _semaphore;
-            private bool _disposed = false;
+            readonly SemaphoreSlim _semaphore;
+            bool _disposed = false;
 
-            public Handler(SemaphoreSlim semaphore)
+            internal Handler(SemaphoreSlim semaphore)
             {
                 _semaphore = semaphore;
             }

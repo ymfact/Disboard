@@ -5,7 +5,7 @@ namespace Yacht
 {
     class BonusScorePlace : IScorePlace
     {
-        private readonly IReadOnlyCollection<IScorePlace> _upper;
+        readonly IReadOnlyCollection<IScorePlace> _upper;
 
         public BonusScorePlace(IReadOnlyCollection<IScorePlace> upper)
         {

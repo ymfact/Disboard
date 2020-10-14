@@ -4,9 +4,9 @@ namespace Yacht
 {
     class BasicScorePlace : IScorePlace
     {
-        private int[] _dices = { };
+        int[] _dices = { };
 
-        private readonly Func<int[], int> _scoreCalculator;
+        readonly Func<int[], int> _scoreCalculator;
 
         public BasicScorePlace(string initial, string name, string desc, Func<int[], int> scoreCalculator)
         {

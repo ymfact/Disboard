@@ -7,7 +7,7 @@ namespace Disboard
     using UserIdType = UInt64;
     sealed class PlayerWithId : Player
     {
-        public PlayerWithId(DiscordMember member, DiscordDmChannel dMChannel)
+        internal PlayerWithId(DiscordMember member, DiscordDmChannel dMChannel)
         {
             Id = member.Id;
             Name = member.Username;
@@ -17,7 +17,7 @@ namespace Disboard
             DMImage = (stream, message, embed) => dMChannel.SendFileAsync(stream, file_name: "image.png", content: message, embed: embed);
             DMImages = (streams, message, embed) => dMChannel.SendMultipleFilesAsync(streams.Select((stream, index) => (stream, index)).ToDictionary(_ => $"{_.index}", _ => _.stream), content: message, embed: embed);
         }
-        public UserIdType Id { get; }
+        internal UserIdType Id { get; }
         public override string Name { get; }
         public override string Mention { get; }
         public override SendType DM { get; }

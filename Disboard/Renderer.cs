@@ -9,7 +9,7 @@ namespace Disboard
 {
     static class Renderer
     {
-        public static Stream Render(this Control control)
+        internal static Stream Render(this Control control)
         {
             var stream = new MemoryStream();
             var png = new PngBitmapEncoder();

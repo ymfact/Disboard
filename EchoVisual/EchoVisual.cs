@@ -5,21 +5,15 @@ using System.Windows.Media;
 
 namespace EchoVisual
 {
-    class EchoVisual : IGame
+    class EchoVisual : Game
     {
-        SendImageType SendImage { get; }
-        RenderType Render { get; }
-        public EchoVisual(GameInitializeData initData)
-        {
-            SendImage = initData.SendImage;
-            Render = initData.Render;
-        }
-        public async Task Start()
+        public EchoVisual(GameInitializeData initData) : base(initData) { }
+        public override async Task Start()
         {
             var image = Render(() => new Label { Foreground = Brushes.White, Content = "EchoVisual started." });
             await SendImage(image);
         }
-        public async Task OnGroup(Player player, string message)
+        public override async Task OnGroup(Player player, string message)
         {
             var image = Render(() => new MyLabel(message));
             await SendImage(image);

@@ -2,13 +2,13 @@
 {
     interface IScorePlace
     {
-        public string Initial { get; }
-        public string Name { get; }
-        public string Desc { get; }
-        public bool IsOpen { get; }
-        public int CurrentScore { get; }
-        public string CurrentScoreString { get; }
-        public int CalculateScore(int[] dices);
-        public void Submit(int[] dices);
+        string Initial { get; }
+        string Name { get; }
+        string Desc { get; }
+        bool IsOpen { get; }
+        int CurrentScore { get; }
+        string CurrentScoreString { get; }
+        int CalculateScore(int[] dices);
+        void Submit(int[] dices);
     }
 }

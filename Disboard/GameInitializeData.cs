@@ -1,7 +1,6 @@
 ﻿using DSharpPlus.Entities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Threading;
 
 namespace Disboard
@@ -9,25 +8,16 @@ namespace Disboard
     using ChannelIdType = UInt64;
     public sealed class GameInitializeData
     {
-        public GameInitializeData(DiscordChannel channel, IReadOnlyList<Player> players, Action<ChannelIdType> onFinish, Dispatcher dispatcher)
+        internal DiscordChannel Channel { get; }
+        internal IReadOnlyList<Player> Players { get; }
+        internal Action<ChannelIdType> OnFinish { get; }
+        internal Dispatcher Dispatcher { get; }
+        internal GameInitializeData(DiscordChannel channel, IReadOnlyList<Player> players, Action<ChannelIdType> onFinish, Dispatcher dispatcher)
         {
-            Send = (message, embed) => channel.SendMessageAsync(message, embed: embed);
-            SendImage = (stream, message, embed) => channel.SendFileAsync(stream, file_name: "image.png", content: message, embed: embed);
-            SendImages = (streams, message, embed) => channel.SendMultipleFilesAsync(streams.Enumerate().ToDictionary(_=>$"{_.index}",_ =>_.elem), content: message, embed: embed);
+            Channel = channel;
             Players = players;
-            OnFinish = () => onFinish(channel.Id);
-            GroupURL = $"https://discord.com/channels/{channel.GuildId}/{channel.Id}";
-            Render = controlConstructor => dispatcher.Invoke(() => controlConstructor().Render());
+            OnFinish = onFinish;
+            Dispatcher = dispatcher;
         }
-        public SendType Send { get; }
-        public SendImageType SendImage { get; }
-        public SendImagesType SendImages { get; }
-        public IReadOnlyList<Player> Players { get; }
-        public Action OnFinish { get; }
-        public string GroupURL { get; }
-        /// <summary>
-        /// 사용하려면 프로젝트가 WPF를 사용하도록 설정해야 합니다. README를 참고하세요.
-        /// </summary>
-        public RenderType Render { get; }
     }
 }

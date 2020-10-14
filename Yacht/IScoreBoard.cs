@@ -6,7 +6,6 @@ namespace Yacht
     {
         IReadOnlyDictionary<string, IScorePlace> Places { get; }
         int TotalScore { get; }
-
         void Submit(string initial, int[] dices);
     }
 }

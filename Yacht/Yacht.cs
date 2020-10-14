@@ -9,20 +9,16 @@ using static Disboard.Macro;
 
 namespace Yacht
 {
-    class Yacht : IGame
+    class Yacht : Game
     {
-        private int _currentPlayerIndex = 0;
-        private int[] __currentDices = { 0, 0, 0, 0, 0 };
-        private int _currentRemainReroll = 0;
+        int _currentPlayerIndex = 0;
+        int[] __currentDices = { 0, 0, 0, 0, 0 };
+        int _currentRemainReroll = 0;
 
-        private Random Random { get; } = new Random();
-        private IReadOnlyDictionary<Player, IScoreBoard> ScoreBoards { get; }
-        private SendType Send { get; }
-        private SendImageType SendImage { get; }
-        private RenderType Render { get; }
-        private Action OnFinish { get; }
+        Random Random { get; } = new Random();
+        IReadOnlyDictionary<Player, IScoreBoard> ScoreBoards { get; }
 
-        private int[] CurrentDices
+        int[] CurrentDices
         {
             get => __currentDices;
             set
@@ -31,26 +27,23 @@ namespace Yacht
                 __currentDices = value;
             }
         }
-        private IReadOnlyList<Player> Players => ScoreBoards.Keys.ToList();
-        private Player? CurrentPlayer => _currentPlayerIndex != -1 ? Players[_currentPlayerIndex] : null;
 
-        public Yacht(GameInitializeData initData)
+        new IReadOnlyList<Player> Players => ScoreBoards.Keys.ToList();
+        Player? CurrentPlayer => _currentPlayerIndex != -1 ? Players[_currentPlayerIndex] : null;
+
+        public Yacht(GameInitializeData initData) : base(initData)
         {
-            Send = initData.Send;
-            SendImage = initData.SendImage;
-            Render = initData.Render;
-            OnFinish = initData.OnFinish;
-            var players = initData.Players.OrderBy(_ => Random.Next()).ToList();
+            var players = Players.OrderBy(_ => Random.Next()).ToList();
             ScoreBoards = players.ToDictionary(_ => _, _ => new ScoreBoard() as IScoreBoard);
         }
 
-        public async Task Start()
+        public override async Task Start()
         {
             await Send("`명령어: R 23456, S 4k`");
             await StartTurn();
         }
 
-        public async Task OnGroup(Player player, string message)
+        public override async Task OnGroup(Player player, string message)
         {
             if (player == CurrentPlayer)
             {
@@ -65,7 +58,7 @@ namespace Yacht
                 }
             }
         }
-        private async Task Reroll(string message)
+        async Task Reroll(string message)
         {
             if (_currentRemainReroll <= 0)
             {
@@ -104,7 +97,7 @@ namespace Yacht
             }
         }
 
-        private async Task Submit(string message)
+        async Task Submit(string message)
         {
             Debug.Assert(CurrentPlayer != null);
 
@@ -131,7 +124,7 @@ namespace Yacht
             }
         }
 
-        private async Task ProceedAndStartTurn()
+        async Task ProceedAndStartTurn()
         {
             if (ScoreBoards.Values.All(_ => _.Places.Values.All(_ => _.IsOpen == false)))
             {
@@ -155,14 +148,14 @@ namespace Yacht
             }
         }
 
-        private async Task StartTurn()
+        async Task StartTurn()
         {
             CurrentDices = Enumerable.Range(0, 5).Select(_ => Random.Next(6) + 1).ToArray();
             _currentRemainReroll = 2;
             await PrintTurn();
         }
 
-        private async Task PrintTurn()
+        async Task PrintTurn()
         {
             Debug.Assert(CurrentPlayer != null);
 
@@ -179,7 +172,7 @@ namespace Yacht
             await Send(diceString);
         }
 
-        private Stream GetBoardImage()
+        Stream GetBoardImage()
             => Render(() => new ScoreBoardGrid(ScoreBoards, CurrentPlayer, CurrentDices));
     }
 }
