@@ -43,10 +43,14 @@ WPF 컨트롤을 사용하여 이미지를 그릴 수 있습니다. EchoVisual �
 
 WPF 컨트롤을 사용하려면 다음 작업을 통해 프로젝트가 WPF를 사용하도록 설정해야 합니다.
 csproj 파일에 `<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">`를 사용하고, `<PropertyGroup>` `</PropertyGroup>` 내부에 `<UseWPF>true</UseWPF>`를 추가합니다.
-`Main` 함수 상단에 `[System.STAThread()]`를 추가합니다.
+Main 함수 상단에 `[System.STAThread()]`를 추가합니다.
+
+#### Disgrid
+Disgrid를 사용하면 텍스트로 이루어진 표를 간단히 만들 수 있습니다.
+Yacht.cs의 GetBoardImage를 예제로 참고하세요.
 
 #### DM
-`IGameUsesDM`을 상속하면 DM을 사용할 수 있습니다.
+IGameUsesDM을 상속하면 DM을 사용할 수 있습니다.
 플레이어의 비밀 입력이 필요할 때 봇은 플레이어에게 DM을 보냅니다.
 그 후 다시 그룹 채널로 돌아가기 위해 서버 링크를 제공할 수도 있습니다.
 플레이어가 작성하는 DM은 플레이어마다 하나의 게임으로만 전달되며, 플레이어는 `BOT restoredm` 명령어를 이용해 플레이어가 작성하는 DM이 어느 게임으로 전달될지 선택할 수 있습니다.
