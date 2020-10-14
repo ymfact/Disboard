@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace YachtVisual
+namespace Yacht
 {
     partial class ScoreBoardGrid : UserControl
     {

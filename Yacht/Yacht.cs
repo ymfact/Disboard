@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using static Disboard.Macro;
@@ -10,34 +11,37 @@ namespace Yacht
 {
     class Yacht : IGame
     {
-        private const int NAME_LEN = 16;
-        private readonly Random random = new Random();
-        private readonly Action _onFinish;
-        private readonly IReadOnlyDictionary<Player, IScoreBoard> _scoreBoards;
         private int _currentPlayerIndex = 0;
-        private int[] _currentDices = { 0, 0, 0, 0, 0 };
+        private int[] __currentDices = { 0, 0, 0, 0, 0 };
         private int _currentRemainReroll = 0;
+
+        private Random Random { get; } = new Random();
+        private IReadOnlyDictionary<Player, IScoreBoard> ScoreBoards { get; }
+        private SendType Send { get; }
+        private SendImageType SendImage { get; }
+        private RenderType Render { get; }
+        private Action OnFinish { get; }
 
         private int[] CurrentDices
         {
-            get => _currentDices;
+            get => __currentDices;
             set
             {
                 Debug.Assert(value.Length == 5);
-                _currentDices = value;
+                __currentDices = value;
             }
         }
-
-        private SendType Send { get; }
-        private IReadOnlyList<Player> Players => _scoreBoards.Keys.ToList();
+        private IReadOnlyList<Player> Players => ScoreBoards.Keys.ToList();
         private Player? CurrentPlayer => _currentPlayerIndex != -1 ? Players[_currentPlayerIndex] : null;
 
         public Yacht(GameInitializeData initData)
         {
             Send = initData.Send;
-            _onFinish = initData.OnFinish;
-            var players = initData.Players.OrderBy(_ => random.Next()).ToList();
-            _scoreBoards = players.ToDictionary(_ => _, _ => new ScoreBoard() as IScoreBoard);
+            SendImage = initData.SendImage;
+            Render = initData.Render;
+            OnFinish = initData.OnFinish;
+            var players = initData.Players.OrderBy(_ => Random.Next()).ToList();
+            ScoreBoards = players.ToDictionary(_ => _, _ => new ScoreBoard() as IScoreBoard);
         }
 
         public async Task Start()
@@ -89,7 +93,7 @@ namespace Yacht
                         throw new System.FormatException();
                     }
                 }
-                newDices.AddRange(Enumerable.Range(0, 5 - newDices.Count).Select(_ => random.Next(6) + 1));
+                newDices.AddRange(Enumerable.Range(0, 5 - newDices.Count).Select(_ => Random.Next(6) + 1));
                 CurrentDices = newDices.ToArray();
                 _currentRemainReroll -= 1;
                 await PrintTurn();
@@ -99,12 +103,13 @@ namespace Yacht
                 await Send(W("리롤할 주사위를 다시 입력하세요. 예시: R 334"));
             }
         }
+
         private async Task Submit(string message)
         {
             Debug.Assert(CurrentPlayer != null);
 
             var split = message.Split();
-            var scoreBoard = _scoreBoards[CurrentPlayer];
+            var scoreBoard = ScoreBoards[CurrentPlayer];
             if (split.Length != 2)
             {
                 await Send(W("이니셜을 입력하세요.예시: S 3k"));
@@ -125,18 +130,19 @@ namespace Yacht
                 await Send(W("올바른 이니셜을 입력하세요. 예시: S 3k"));
             }
         }
+
         private async Task ProceedAndStartTurn()
         {
-            if (_scoreBoards.Values.All(_ => _.Places.Values.All(_ => _.IsOpen == false)))
+            if (ScoreBoards.Values.All(_ => _.Places.Values.All(_ => _.IsOpen == false)))
             {
                 _currentPlayerIndex = -1;
-                var boardString = GetBoardString();
-                var highestScore = _scoreBoards.Values.Select(_ => _.TotalScore).OrderByDescending(_ => _).First();
-                var winners = Players.Where(_ => _scoreBoards[_].TotalScore == highestScore).Select(_ => _.Name);
+                await SendImage(GetBoardImage());
+                var highestScore = ScoreBoards.Values.Select(_ => _.TotalScore).OrderByDescending(_ => _).First();
+                var winners = Players.Where(_ => ScoreBoards[_].TotalScore == highestScore).Select(_ => _.Name);
                 var winnerString = winners.Count() > 1 ? "Winners: " : "Winner: ";
                 winnerString += W(string.Join(", ", winners));
-                await Send(boardString + winnerString);
-                _onFinish();
+                await Send(winnerString);
+                OnFinish();
             }
             else
             {
@@ -148,82 +154,32 @@ namespace Yacht
                 await StartTurn();
             }
         }
+
         private async Task StartTurn()
         {
-            CurrentDices = Enumerable.Range(0, 5).Select(_ => random.Next(6) + 1).ToArray();
+            CurrentDices = Enumerable.Range(0, 5).Select(_ => Random.Next(6) + 1).ToArray();
             _currentRemainReroll = 2;
             await PrintTurn();
         }
+
         private async Task PrintTurn()
         {
             Debug.Assert(CurrentPlayer != null);
 
-            var boardString = GetBoardString();
+            await SendImage(GetBoardImage());
 
             var checkTexts = Enumerable.Range(0, 3).Reverse().Select(_ => _ < _currentRemainReroll).Select(_ => _ ? ":arrows_counterclockwise:" : ":ballot_box_with_check:");
             var checkString = string.Join(" ", checkTexts);
             var turnIndicator = $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn, Reroll: " + checkString;
-            await Send(boardString + turnIndicator);
+            await Send(turnIndicator);
 
             var diceTextTemplates = new List<string> { ":zero:", ":one:", ":two:", ":three:", ":four:", ":five:", ":six:" };
             var diceTexts = CurrentDices.Select(_ => diceTextTemplates[_]);
             var diceString = string.Join(" ", diceTexts);
             await Send(diceString);
         }
-        private string GetBoardString()
-        {
-            var printString = $"{' ',2} {' ',15} {' ',17}";
-            foreach (Player player in Players)
-            {
-                printString += TrimName(player.Name);
-            }
-            var scoreBoard = _scoreBoards.First().Value.Places.Values; // arbitrary one
-            foreach (IScorePlace place in scoreBoard)
-            {
-                var initial = place.Initial;
-                printString += $"\n{initial,2} {place.Name,15} {place.Desc,17}";
-                foreach (Player player in Players)
-                {
-                    var placeOfUser = _scoreBoards[player].Places[initial];
-                    var currentScoreString = placeOfUser.CurrentScoreString;
-                    var estimateScore = placeOfUser.CalculateScore(CurrentDices);
-                    bool isShowEstimation = player == CurrentPlayer && placeOfUser.IsOpen;
-                    var scoreText = isShowEstimation ? $"({estimateScore})" : $"{currentScoreString}";
-                    printString += $"{scoreText,NAME_LEN}";
-                }
-            }
-            printString += $"\n{' ',2} {' ',15} {"TOTAL",17}";
-            foreach (Player player in Players)
-            {
-                printString += $"{_scoreBoards[player].TotalScore,NAME_LEN}";
-            }
 
-            return W(printString);
-        }
-
-        private string TrimName(string name)
-        {
-            int width = 0;
-            int wideCharCount = 0;
-            string acc = "";
-            foreach (char c in name)
-            {
-                if (c < 128)
-                {
-                    if (width + 1 > NAME_LEN)
-                        break;
-                    width += 1;
-                }
-                else
-                {
-                    if (width + 2 > NAME_LEN)
-                        break;
-                    wideCharCount += 1;
-                    width += 2;
-                }
-                acc += c;
-            }
-            return acc.PadLeft(NAME_LEN - wideCharCount);
-        }
+        private Stream GetBoardImage()
+            => Render(() => new ScoreBoardGrid(ScoreBoards, CurrentPlayer, CurrentDices));
     }
 }
