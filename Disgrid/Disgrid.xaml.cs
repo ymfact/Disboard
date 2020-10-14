@@ -4,6 +4,11 @@ using System.Windows.Controls;
 
 namespace Disgrid
 {
+    /// <summary>
+    /// Disgrid를 사용하면 텍스트로 이루어진 표를 간단히 만들 수 있습니다.
+    /// Yacht.cs의 GetBoardImage를 예제로써 참고하세요.
+    /// 사용하려면 Main 함수 윗줄에 [System.STAThread()]를 추가해야 합니다.
+    /// </summary>
     partial class Disgrid : UserControl
     {
         public Disgrid(int rowCount, int columnCount)
