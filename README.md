@@ -7,12 +7,11 @@
 using Disboard;
 using System.Threading.Tasks;
 
-class Echo : IGame
+class Echo : Game
 {
-    SendType Send { get; }
-    public Echo(GameInitializeData initData) => Send = initData.Send;
-    public Task Start() => Send("`Echo Started.`");
-    public Task OnGroup(Player player, string message) => Send(message);
+    public Echo(GameInitializeData initData) : base(initData) { }
+    public override Task Start() => Send("`Echo Started.`");
+    public override Task OnGroup(Player player, string message) => Send(message);
 }
 
 class Program
