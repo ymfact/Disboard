@@ -23,15 +23,14 @@ namespace Disboard
     public sealed class Disboard
     {
         Func<GameInitializeData, Game> GameConstructor { get; }
-        Application Application { get; }
-        readonly ConcurrentDictionary<ChannelIdType, (Game game, IReadOnlyList<Player> players, Semaphore semaphore)> Games = new ConcurrentDictionary<ChannelIdType, (Game, IReadOnlyList<Player>, Semaphore)>();
-        readonly ConcurrentDictionary<UserIdType, (GameUsesDM game, IReadOnlyList<Player> players, Semaphore semaphore)> GamesByUsers = new ConcurrentDictionary<UserIdType, (GameUsesDM, IReadOnlyList<Player>, Semaphore)>();
+        Application Application { get; } = new Application();
+        ConcurrentDictionary<ChannelIdType, (Game game, IReadOnlyList<Player> players, Semaphore semaphore)> Games { get; }
+            = new ConcurrentDictionary<ChannelIdType, (Game, IReadOnlyList<Player>, Semaphore)>();
+        ConcurrentDictionary<UserIdType, (GameUsesDM game, IReadOnlyList<Player> players, Semaphore semaphore)> GamesByUsers { get; }
+            = new ConcurrentDictionary<UserIdType, (GameUsesDM, IReadOnlyList<Player>, Semaphore)>();
 
         public Disboard(Func<GameInitializeData, Game> gameConstructor)
-        {
-            GameConstructor = gameConstructor;
-            Application = new Application();
-        }
+            => GameConstructor = gameConstructor;
 
         public void Run(string token)
         {
