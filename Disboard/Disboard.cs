@@ -6,8 +6,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace Disboard
 {
@@ -15,19 +16,24 @@ namespace Disboard
     using ChannelIdType = UInt64;
     using UserIdType = UInt64;
 
-    public delegate Task SendType(string message);
+    public delegate Task SendType(string message, DiscordEmbed? embed = null);
+    public delegate Task SendImageType(Stream stream, string? message = null, DiscordEmbed? embed = null);
+    public delegate Task SendImagesType(IReadOnlyList<Stream> streams, string? message = null, DiscordEmbed? embed = null);
+    public delegate Stream RenderType(Func<Control> controlConstructor);
     public sealed class Disboard
     {
+        private Application Application { get; }
         private Func<GameInitializeData, IGame> GameConstructor { get; }
         private readonly ConcurrentDictionary<ChannelIdType, (IGame game, IReadOnlyList<PlayerWithId> players, Semaphore semaphore)> _games = new ConcurrentDictionary<ChannelIdType, (IGame, IReadOnlyList<PlayerWithId>, Semaphore)>();
         private readonly ConcurrentDictionary<UserIdType, (IGameUsesDM game, IReadOnlyList<PlayerWithId> players, Semaphore semaphore)> _gamesByUsers = new ConcurrentDictionary<UserIdType, (IGameUsesDM, IReadOnlyList<PlayerWithId>, Semaphore)>();
 
         public Disboard(Func<GameInitializeData, IGame> gameConstructor)
         {
+            Application = new Application();
             GameConstructor = gameConstructor;
         }
 
-        public async Task Run(string token)
+        public void Run(string token)
         {
             DiscordClient discord = new DiscordClient(new DiscordConfiguration
             {
@@ -41,8 +47,8 @@ namespace Disboard
             discord.GuildMemberAdded += GuildMemberAdded;
             discord.MessageCreated += MessageCreated;
 
-            await discord.ConnectAsync();
-            await Task.Delay(-1);
+            Task.Run(() => discord.ConnectAsync().GetAwaiter().GetResult());
+            Application.Run();
         }
 
         public async Task NewGame(DiscordChannel channel, IEnumerable<DiscordUser> users)
@@ -56,7 +62,7 @@ namespace Disboard
             var members = channel.Guild.Members.Where(_ => userIds.Contains(_.Id));
             var dMChannels = await Task.WhenAll(members.Select(_ => _.CreateDmChannelAsync()));
             var players = members.Zip(dMChannels).Select(_ => new PlayerWithId(_.First, _.Second)).ToList();
-            var gameInitializer = new GameInitializeData(channel, players, OnFinish);
+            var gameInitializer = new GameInitializeData(channel, players, OnFinish, Application.Dispatcher);
             IGame game = GameConstructor(gameInitializer);
             var semaphore = new Semaphore();
 
@@ -178,7 +184,7 @@ namespace Disboard
                         {
                             using (await semaphore.LockAsync())
                             {
-                                await game.OnDM(player, content, _ => channel.SendMessageAsync(_));
+                                await game.OnDM(player, content);
                             }
                         }
                         catch (Exception e)
