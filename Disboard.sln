@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30523.141
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Disboard", "Disboard\Disboard.csproj", "{F94C3947-6DF5-4341-807C-2C33F475C3D1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yahtzee", "Yahtzee\Yahtzee.csproj", "{CE271119-922D-4652-A39D-DD1EFC6C9EE4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yacht", "Yacht\Yacht.csproj", "{CE271119-922D-4652-A39D-DD1EFC6C9EE4}"
 	ProjectSection(ProjectDependencies) = postProject
 		{F94C3947-6DF5-4341-807C-2C33F475C3D1} = {F94C3947-6DF5-4341-807C-2C33F475C3D1}
 	EndProjectSection

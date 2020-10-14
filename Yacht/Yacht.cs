@@ -6,9 +6,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using static Disboard.Macro;
 
-namespace Yahtzee
+namespace Yacht
 {
-    class Yahtzee : IGame
+    class Yacht : IGame
     {
         private const int NAME_LEN = 16;
         private readonly Random random = new Random();
@@ -33,7 +33,7 @@ namespace Yahtzee
 
         private Player? CurrentPlayer => _currentPlayerIndex != -1 ? _players[_currentPlayerIndex] : null;
 
-        public Yahtzee(GameInitializeData initData)
+        public Yacht(GameInitializeData initData)
         {
             Send = initData.Send;
             _players = initData.Players.OrderBy(_ => random.Next()).ToList();

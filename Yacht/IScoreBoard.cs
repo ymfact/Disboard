@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Yahtzee
+namespace Yacht
 {
     interface IScoreBoard
     {

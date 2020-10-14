@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace Yahtzee
+namespace Yacht
 {
     class BonusScorePlace : IScorePlace
     {

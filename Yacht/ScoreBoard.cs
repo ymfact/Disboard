@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace Yahtzee
+namespace Yacht
 {
     class ScoreBoard : IScoreBoard
     {
@@ -25,12 +25,11 @@ namespace Yahtzee
             var lower = new List<IScorePlace>
             {
                 new BasicScorePlace("ch", "Choice", "Sum of the dice", dices => dices.Sum()),
-                new BasicScorePlace("3k", "Three of a kind", "Sum of the dice", dices => dices.GroupBy(_=>_).Any(group => group.Count() >= 3) ? dices.Sum() : 0),
                 new BasicScorePlace("4k", "Four of a kind", "Sum of the dice", dices => dices.GroupBy(_=>_).Any(group => group.Count() >= 4) ? dices.Sum() : 0),
                 new BasicScorePlace("fh", "Full House", "Sum of the dice", dices => dices.GroupBy(_=>_).Any(group => group.Count() == 2) && dices.GroupBy(_=>_).Any(group => group.Count() == 3) ? dices.Sum() : 0),
                 new BasicScorePlace("ss", "Small straight", "15 points", dices => smallStraights.Any(_ => _.IsSubsetOf(dices)) ? 15 : 0),
                 new BasicScorePlace("ls", "Large straight", "30 points", dices => largeStraights.Any(_ => _.IsSubsetOf(dices)) ? 30 : 0),
-                new BasicScorePlace("yt", "Yahtzee", "50 points", dices => dices.GroupBy(_=>_).Any(group => group.Count() == 5) ? 50 : 0),
+                new BasicScorePlace("yt", "Yacht", "50 points", dices => dices.GroupBy(_=>_).Any(group => group.Count() == 5) ? 50 : 0),
             };
 
             var places = upper.Append(bonus).Concat(lower);

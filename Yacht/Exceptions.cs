@@ -1,4 +1,4 @@
-﻿namespace Yahtzee
+﻿namespace Yacht
 {
     class CommandNotFoundException : System.Exception
     {
