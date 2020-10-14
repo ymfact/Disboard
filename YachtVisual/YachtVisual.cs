@@ -2,13 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using static Disboard.Macro;
 
-namespace Yacht
+namespace YachtVisual
 {
-    class Yacht : IGame
+    class YachtVisual : IGame
     {
         private const int NAME_LEN = 16;
         private readonly Random random = new Random();
@@ -29,12 +30,16 @@ namespace Yacht
         }
 
         private SendType Send { get; }
+        private SendImageType SendImage { get; }
+        private RenderType Render { get; }
         private IReadOnlyList<Player> Players => _scoreBoards.Keys.ToList();
         private Player? CurrentPlayer => _currentPlayerIndex != -1 ? Players[_currentPlayerIndex] : null;
 
-        public Yacht(GameInitializeData initData)
+        public YachtVisual(GameInitializeData initData)
         {
             Send = initData.Send;
+            SendImage = initData.SendImage;
+            Render = initData.Render;
             _onFinish = initData.OnFinish;
             var players = initData.Players.OrderBy(_ => random.Next()).ToList();
             _scoreBoards = players.ToDictionary(_ => _, _ => new ScoreBoard() as IScoreBoard);
@@ -130,12 +135,12 @@ namespace Yacht
             if (_scoreBoards.Values.All(_ => _.Places.Values.All(_ => _.IsOpen == false)))
             {
                 _currentPlayerIndex = -1;
-                var boardString = GetBoardString();
+                await SendImage(GetBoardImage());
                 var highestScore = _scoreBoards.Values.Select(_ => _.TotalScore).OrderByDescending(_ => _).First();
                 var winners = Players.Where(_ => _scoreBoards[_].TotalScore == highestScore).Select(_ => _.Name);
                 var winnerString = winners.Count() > 1 ? "Winners: " : "Winner: ";
                 winnerString += W(string.Join(", ", winners));
-                await Send(boardString + winnerString);
+                await Send(winnerString);
                 _onFinish();
             }
             else
@@ -158,19 +163,19 @@ namespace Yacht
         {
             Debug.Assert(CurrentPlayer != null);
 
-            var boardString = GetBoardString();
+            await SendImage(GetBoardImage());
 
             var checkTexts = Enumerable.Range(0, 3).Reverse().Select(_ => _ < _currentRemainReroll).Select(_ => _ ? ":arrows_counterclockwise:" : ":ballot_box_with_check:");
             var checkString = string.Join(" ", checkTexts);
             var turnIndicator = $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn, Reroll: " + checkString;
-            await Send(boardString + turnIndicator);
+            await Send(turnIndicator);
 
             var diceTextTemplates = new List<string> { ":zero:", ":one:", ":two:", ":three:", ":four:", ":five:", ":six:" };
             var diceTexts = CurrentDices.Select(_ => diceTextTemplates[_]);
             var diceString = string.Join(" ", diceTexts);
             await Send(diceString);
         }
-        private string GetBoardString()
+        private Stream GetBoardImage()
         {
             var printString = $"{' ',2} {' ',15} {' ',17}";
             foreach (Player player in Players)
@@ -198,7 +203,7 @@ namespace Yacht
                 printString += $"{_scoreBoards[player].TotalScore,NAME_LEN}";
             }
 
-            return W(printString);
+            return Render(() => new ScoreBoardGrid(_scoreBoards, CurrentPlayer, CurrentDices));
         }
 
         private string TrimName(string name)
