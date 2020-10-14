@@ -24,8 +24,8 @@ namespace Disboard
     {
         Func<GameInitializeData, Game> GameConstructor { get; }
         Application Application { get; }
-        readonly ConcurrentDictionary<ChannelIdType, (Game game, IReadOnlyList<PlayerWithId> players, Semaphore semaphore)> Games = new ConcurrentDictionary<ChannelIdType, (Game, IReadOnlyList<PlayerWithId>, Semaphore)>();
-        readonly ConcurrentDictionary<UserIdType, (GameUsesDM game, IReadOnlyList<PlayerWithId> players, Semaphore semaphore)> GamesByUsers = new ConcurrentDictionary<UserIdType, (GameUsesDM, IReadOnlyList<PlayerWithId>, Semaphore)>();
+        readonly ConcurrentDictionary<ChannelIdType, (Game game, IReadOnlyList<Player> players, Semaphore semaphore)> Games = new ConcurrentDictionary<ChannelIdType, (Game, IReadOnlyList<Player>, Semaphore)>();
+        readonly ConcurrentDictionary<UserIdType, (GameUsesDM game, IReadOnlyList<Player> players, Semaphore semaphore)> GamesByUsers = new ConcurrentDictionary<UserIdType, (GameUsesDM, IReadOnlyList<Player>, Semaphore)>();
 
         public Disboard(Func<GameInitializeData, Game> gameConstructor)
         {
@@ -61,7 +61,7 @@ namespace Disboard
             var userIds = users.Select(_ => _.Id);
             var members = channel.Guild.Members.Where(_ => userIds.Contains(_.Id));
             var dMChannels = await Task.WhenAll(members.Select(_ => _.CreateDmChannelAsync()));
-            var players = members.Zip(dMChannels).Select(_ => new PlayerWithId(_.First, _.Second)).ToList();
+            var players = members.Zip(dMChannels).Select(_ => new Player(_.First, _.Second)).ToList();
             var gameInitializeData = new GameInitializeData(channel, players, OnFinish, Application.Dispatcher);
             Game game = GameConstructor(gameInitializeData);
             var semaphore = new Semaphore();
