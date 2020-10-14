@@ -33,7 +33,7 @@ namespace Yacht
 
         public Yacht(GameInitializeData initData) : base(initData)
         {
-            var players = Players.OrderBy(_ => Random.Next()).ToList();
+            var players = base.Players.OrderBy(_ => Random.Next()).ToList();
             ScoreBoards = players.ToDictionary(_ => _, _ => new ScoreBoard() as IScoreBoard);
         }
 
@@ -172,7 +172,37 @@ namespace Yacht
             await Send(diceString);
         }
 
-        Stream GetBoardImage()
-            => Render(() => new ScoreBoardGrid(ScoreBoards, CurrentPlayer, CurrentDices));
+        Stream GetBoardImage() => Render(() =>
+        {
+            var scorePlaces = ScoreBoards.Values.First().Places.Values.ToList();
+            var grid = new Disgrid.Disgrid(1 + scorePlaces.Count + 1, 3 + Players.Count);
+
+            foreach (var (i, player) in Players.Enumerate())
+                grid.Add(0, 3 + i, player.Name);
+
+            foreach (var (i, place) in scorePlaces.Enumerate())
+            {
+                int row = 1 + i;
+                grid.Add(row, 0, place.Initial);
+                grid.Add(row, 1, place.Name);
+                grid.Add(row, 2, place.Desc);
+                foreach (var (j, (player, scoreBoard)) in ScoreBoards.Enumerate())
+                {
+                    var placeOfUser = scoreBoard.Places[place.Initial];
+                    var currentScoreString = placeOfUser.CurrentScoreString;
+                    var estimateScore = placeOfUser.CalculateScore(CurrentDices);
+                    bool isShowEstimation = player == CurrentPlayer && placeOfUser.IsOpen;
+                    var scoreText = isShowEstimation ? $"({estimateScore})" : $"{currentScoreString}";
+                    grid.Add(row, 3 + j, scoreText);
+                }
+            }
+            int totalScoreRow = 1 + scorePlaces.Count;
+            grid.Add(totalScoreRow, 2, "TOTAL");
+
+            foreach (var (i, (player, scoreBoard)) in ScoreBoards.Enumerate())
+                grid.Add(totalScoreRow, 3 + i, scoreBoard.TotalScore.ToString());
+
+            return grid;
+        });
     }
 }
