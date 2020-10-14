@@ -1,19 +1,29 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Yacht
 {
     class BasicScorePlace : IScorePlace
     {
-        int[] _dices = { };
+        int[] __dices = { };
 
-        readonly Func<int[], int> _scoreCalculator;
+        int[] Dices
+        {
+            get => __dices;
+            set
+            {
+                Debug.Assert(value.Length == 5);
+                __dices = value;
+            }
+        }
+        Func<int[], int> ScoreCalculator { get; }
 
         public BasicScorePlace(string initial, string name, string desc, Func<int[], int> scoreCalculator)
         {
             Initial = initial;
             Name = name;
             Desc = desc;
-            _scoreCalculator = scoreCalculator;
+            ScoreCalculator = scoreCalculator;
         }
 
         public string Initial { get; }
@@ -23,30 +33,42 @@ namespace Yacht
         public string Desc { get; }
 
         public bool IsOpen
-            => _dices.Length == 0;
+            => Dices.Length == 0;
 
         public virtual int CurrentScore
         {
             get
             {
-                if (_dices.Length == 0)
+                if (Dices.Length == 0)
                 {
                     return 0;
                 }
                 else
                 {
-                    return CalculateScore(_dices);
+                    return CalculateScore(Dices);
                 }
             }
         }
 
         public string CurrentScoreString
-            => CurrentScore.ToString();
+        {
+            get
+            {
+                if (IsOpen)
+                {
+                    return "_";
+                }
+                else
+                {
+                    return CurrentScore.ToString();
+                }
+            }
+        }
 
         public int CalculateScore(int[] dices)
-            => _scoreCalculator(dices);
+            => ScoreCalculator(dices);
 
         public void Submit(int[] dices)
-            => _dices = dices;
+            => Dices = dices;
     }
 }

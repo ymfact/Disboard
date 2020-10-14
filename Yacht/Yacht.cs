@@ -15,7 +15,7 @@ namespace Yacht
     class Yacht : Game
     {
         int _currentPlayerIndex = 0;
-        int[] __currentDices = { 0, 0, 0, 0, 0 };
+        int[] __currentDices = { };
         int _currentRemainReroll = 0;
 
         Random Random { get; } = new Random();
