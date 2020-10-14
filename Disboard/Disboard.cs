@@ -4,7 +4,9 @@ using DSharpPlus.EventArgs;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Disboard
@@ -17,8 +19,8 @@ namespace Disboard
     public sealed class Disboard
     {
         private Func<GameInitializeData, IGame> GameConstructor { get; }
-        private readonly ConcurrentDictionary<ChannelIdType, (IGame game, IReadOnlyList<PlayerWithId> players)> _games = new ConcurrentDictionary<ChannelIdType, (IGame, IReadOnlyList<PlayerWithId>)>();
-        private readonly ConcurrentDictionary<UserIdType, (IGameUsesDM game, IReadOnlyList<PlayerWithId> players)> _gamesByUsers = new ConcurrentDictionary<UserIdType, (IGameUsesDM, IReadOnlyList<PlayerWithId>)>();
+        private readonly ConcurrentDictionary<ChannelIdType, (IGame game, IReadOnlyList<PlayerWithId> players, Semaphore semaphore)> _games = new ConcurrentDictionary<ChannelIdType, (IGame, IReadOnlyList<PlayerWithId>, Semaphore)>();
+        private readonly ConcurrentDictionary<UserIdType, (IGameUsesDM game, IReadOnlyList<PlayerWithId> players, Semaphore semaphore)> _gamesByUsers = new ConcurrentDictionary<UserIdType, (IGameUsesDM, IReadOnlyList<PlayerWithId>, Semaphore)>();
 
         public Disboard(Func<GameInitializeData, IGame> gameConstructor)
         {
@@ -56,6 +58,7 @@ namespace Disboard
             var players = members.Zip(dMChannels).Select(_ => new PlayerWithId(_.First, _.Second)).ToList();
             var gameInitializer = new GameInitializeData(channel, players, OnFinish);
             IGame game = GameConstructor(gameInitializer);
+            var semaphore = new Semaphore();
 
             OnFinish(channel.Id);
             if (game is IGameUsesDM)
@@ -65,16 +68,23 @@ namespace Disboard
                 {
                     if (_gamesByUsers.ContainsKey(player.Id))
                     {
-                        player.DM("`기존에 진행중이던 게임이 있습니다. 기존 게임에 다시 참여하려면 기존 채널에서 BOT restoredm을 입력하세요.`").GetAwaiter().GetResult();
+                        await player.DM("`기존에 진행중이던 게임이 있습니다. 기존 게임에 다시 참여하려면 기존 채널에서 BOT restoredm을 입력하세요.`");
                         _gamesByUsers.Remove(player.Id, out _);
                     }
-                    _gamesByUsers.TryAdd(player.Id, (gameUsesDM!, players));
+                    _gamesByUsers.TryAdd(player.Id, (gameUsesDM!, players, semaphore));
                 }
             }
-            _games.TryAdd(channel.Id, (game, players));
-            lock (game)
+            _games.TryAdd(channel.Id, (game, players, semaphore));
+            try
             {
-                game.Start().GetAwaiter().GetResult();
+                using (await semaphore.LockAsync())
+                {
+                    await game.Start();
+                }
+            }
+            catch(Exception e)
+            {
+                Log(e.ToString());
             }
         }
 
@@ -82,7 +92,7 @@ namespace Disboard
         {
             if (_games.ContainsKey(channelId))
             {
-                var (_, users) = _games[channelId];
+                var (_, users, _) = _games[channelId];
                 foreach (var user in users)
                     _gamesByUsers.Remove(user.Id, out _);
                 _games.Remove(channelId, out _);
@@ -90,9 +100,9 @@ namespace Disboard
         }
 
         private void LogMessageReceived(object? sender, DebugLogMessageEventArgs _)
-        {
-            Console.WriteLine(_.Message);
-        }
+            => Log(_.Message);
+        private void Log(string log)
+            => Console.WriteLine(log);
 
         private Task Ready(ReadyEventArgs _)
         {
@@ -158,15 +168,22 @@ namespace Disboard
 
             if (channel.Type == ChannelType.Private)
             {
-                var (game, players) = _gamesByUsers.GetValueOrDefault(authorId);
+                var (game, players, semaphore) = _gamesByUsers.GetValueOrDefault(authorId);
                 if (game is IGameUsesDM)
                 {
                     var player = players.Where(_ => _.Id == authorId).FirstOrDefault();
                     if(player != null)
                     {
-                        lock (game)
+                        try
                         {
-                            game.OnDM(player, content, _ => channel.SendMessageAsync(_)).GetAwaiter().GetResult();
+                            using (await semaphore.LockAsync())
+                            {
+                                await game.OnDM(player, content, _ => channel.SendMessageAsync(_));
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Log(e.ToString());
                         }
                     }
                 }
@@ -178,7 +195,7 @@ namespace Disboard
             if(channel.Type == ChannelType.Text || channel.Type == ChannelType.Group)
             {
                 var guild = __.Guild;
-                var (game, players) = _games.GetValueOrDefault(channel.Id);
+                var (game, players, semaphore) = _games.GetValueOrDefault(channel.Id);
                 string[] split = content.Split(" ");
                 if (split.Length > 0 && split[0].ToLower() == "bot")
                 {
@@ -249,7 +266,7 @@ namespace Disboard
                                 else
                                 {
                                     _gamesByUsers.Remove(authorId, out _);
-                                    _gamesByUsers.TryAdd(authorId, (gameUsesDM!, players));
+                                    _gamesByUsers.TryAdd(authorId, (gameUsesDM!, players, semaphore));
                                     await dMChannel.SendMessageAsync("`복원되었습니다. 이제부터 이곳에 입력하는 메시지는 해당 채널의 게임으로 전달됩니다.`");
                                 }
                             }
@@ -267,9 +284,16 @@ namespace Disboard
                         var player = players.Where(_ => _.Id == authorId).FirstOrDefault();
                         if(player != null)
                         {
-                            lock (game)
+                            try
                             {
-                                game.OnGroup(player, content).GetAwaiter().GetResult();
+                                using (await semaphore.LockAsync())
+                                {
+                                    await game.OnGroup(player, content);
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Log(e.ToString());
                             }
                         }
                     }

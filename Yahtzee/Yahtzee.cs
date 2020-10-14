@@ -47,32 +47,33 @@ namespace Yahtzee
             await StartTurn();
         }
 
-        public Task OnGroup(Player player, string message)
+        public async Task OnGroup(Player player, string message)
         {
             if (player == CurrentPlayer)
             {
                 var split = message.Split();
                 if (split.Length > 0 && split[0].ToLower() == "r")
                 {
-                    return Reroll(message);
+                    await Reroll(message);
                 }
                 else if (split.Length > 0 && split[0].ToLower() == "s")
                 {
-                    return Submit(message);
+                    await Submit(message);
                 }
             }
-            return Task.CompletedTask;
         }
-        private Task Reroll(string message)
+        private async Task Reroll(string message)
         {
             if (_currentRemainReroll <= 0)
             {
-                return Send(W("남은 리롤 기회가 없습니다. 점수를 적을 항목을 선택하세요. 예시: S 3k"));
+                await Send(W("남은 리롤 기회가 없습니다. 점수를 적을 항목을 선택하세요. 예시: S 3k"));
+                return;
             }
             var split = message.Split();
             if (split.Length != 2)
             {
-                return Send(W("리롤할 주사위를 입력하세요. 예시: R 334"));
+                await Send(W("리롤할 주사위를 입력하세요. 예시: R 334"));
+                return;
             }
             try
             {
@@ -92,14 +93,14 @@ namespace Yahtzee
                 newDices.AddRange(Enumerable.Range(0, 5 - newDices.Count).Select(_ => random.Next(6) + 1));
                 CurrentDices = newDices.ToArray();
                 _currentRemainReroll -= 1;
-                return PrintTurn();
+                await PrintTurn();
             }
             catch (System.FormatException)
             {
-                return Send(W("리롤할 주사위를 다시 입력하세요. 예시: R 334"));
+                await Send(W("리롤할 주사위를 다시 입력하세요. 예시: R 334"));
             }
         }
-        private Task Submit(string message)
+        private async Task Submit(string message)
         {
             Debug.Assert(CurrentPlayer != null);
 
@@ -107,21 +108,22 @@ namespace Yahtzee
             var scoreBoard = _scoreBoards[CurrentPlayer];
             if (split.Length != 2)
             {
-                return Send(W("이니셜을 입력하세요.예시: S 3k"));
+                await Send(W("이니셜을 입력하세요.예시: S 3k"));
+                return;
             }
             var initial = split[1];
             try
             {
                 scoreBoard.Submit(initial, CurrentDices);
-                return ProceedAndStartTurn();
+                await ProceedAndStartTurn();
             }
             catch (System.InvalidOperationException)
             {
-                return Send(W("이미 점수를 채운 항목입니다."));
+                await Send(W("이미 점수를 채운 항목입니다."));
             }
             catch (CommandNotFoundException)
             {
-                return Send(W("올바른 이니셜을 입력하세요. 예시: S 3k"));
+                await Send(W("올바른 이니셜을 입력하세요. 예시: S 3k"));
             }
         }
         private async Task ProceedAndStartTurn()
@@ -147,11 +149,11 @@ namespace Yahtzee
                 await StartTurn();
             }
         }
-        private Task StartTurn()
+        private async Task StartTurn()
         {
             CurrentDices = Enumerable.Range(0, 5).Select(_ => random.Next(6) + 1).ToArray();
             _currentRemainReroll = 2;
-            return PrintTurn();
+            await PrintTurn();
         }
         private async Task PrintTurn()
         {
