@@ -1,7 +1,6 @@
 ﻿using DSharpPlus.Entities;
 using System;
 using System.Linq;
-using System.Windows.Threading;
 
 namespace Disboard
 {
@@ -23,13 +22,7 @@ namespace Disboard
         public override string Mention { get; }
         public override SendType DM { get; }
         public override string DMURL { get; }
-        /// <summary>
-        /// 사용하려면 프로젝트를 Visual 타입으로 설정해야 합니다. README를 참고하세요.
-        /// </summary>
         public SendImageType DMImage { get; }
-        /// <summary>
-        /// 사용하려면 프로젝트를 Visual 타입으로 설정해야 합니다. README를 참고하세요.
-        /// </summary>
         public SendImagesType DMImages { get; }
     }
 }
