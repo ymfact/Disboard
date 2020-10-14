@@ -26,7 +26,7 @@ namespace Disboard
         public Action OnFinish { get; }
         public string GroupURL { get; }
         /// <summary>
-        /// 사용하려면 프로젝트를 Visual 타입으로 설정해야 합니다. README를 참고하세요.
+        /// 사용하려면 프로젝트가 WPF를 사용하도록 설정해야 합니다. README를 참고하세요.
         /// </summary>
         public RenderType Render { get; }
     }

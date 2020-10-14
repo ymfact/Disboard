@@ -33,16 +33,16 @@ class Program
 
 <hr/>
 
-#### 게임 
+#### Game
 게임에 참가하는 인원은 게임 시작 후 변경할 수 없습니다.
 게임에 참가하지 않는 유저는 `BOT restart` 명령어 외에는 게임에 영향을 주지 않습니다.
 클라이언트는 채널마다 서로 다른 게임을 동시에 진행할 수 있습니다.
 한 플레이어는 여러 게임에 참가할 수 있습니다.
 
-#### Visual
+#### Image from WPF Controls
 WPF 컨트롤을 사용하여 이미지를 그릴 수 있습니다. EchoVisual 프로젝트를 참고하세요.
 
-WPF 컨트롤을 사용하려면 다음 작업을 통해 프로젝트를 Visual 타입으로 설정해야 합니다.
+WPF 컨트롤을 사용하려면 다음 작업을 통해 프로젝트가 WPF를 사용하도록 설정해야 합니다.
 csproj 파일에 `<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">`를 사용하고, `<PropertyGroup>` `</PropertyGroup>` 내부에 `<UseWPF>true</UseWPF>`를 추가합니다.
 `Main` 함수 상단에 `[System.STAThread()]`를 추가합니다.
 
