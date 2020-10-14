@@ -8,8 +8,14 @@ namespace Disgrid
     partial class Disgrid : UserControl
     {
         public Grid Grid => grid;
-        public Disgrid(int rowCount, int columnCount)
+        double DefaultFontSize { get; } = SystemFonts.MessageFontSize;
+        HorizontalAlignment DefaultTextAlign { get; }
+        public Disgrid(int rowCount, int columnCount, double? defaultFontSize = null, HorizontalAlignment defaultTextAlign = HorizontalAlignment.Center)
         {
+            DefaultTextAlign = defaultTextAlign;
+            if (defaultFontSize != null && defaultFontSize > 0)
+                DefaultFontSize = defaultFontSize.Value;
+
             InitializeComponent();
             InitGrid(rowCount, columnCount);
         }
@@ -19,7 +25,8 @@ namespace Disgrid
             var label = new Label
             {
                 Content = text,
-                HorizontalContentAlignment = HorizontalAlignment.Center,
+                FontSize = DefaultFontSize,
+                HorizontalContentAlignment = DefaultTextAlign,
                 Foreground = Brushes.White,
             };
             Grid.SetColumn(label, column);
