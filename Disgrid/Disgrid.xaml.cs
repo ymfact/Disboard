@@ -21,15 +21,13 @@ namespace Disgrid
             return label;
         }
 
-        public void AddStyle<ControlType>(DependencyProperty property, object value) where ControlType : Control
+        public void AddStyle<ControlType>(DependencyProperty property, object value) where ControlType : DependencyObject
         {
             var type = typeof(ControlType);
-            if (false == InnerGrid.Resources.Contains(type))
-            {
-                InnerGrid.Resources.Add(type, new Style(type));
-            }
-            var style = InnerGrid.Resources[type] as Style;
-            style!.Setters.Add(new Setter(property, value));
+            var setter = new Setter(property, value);
+            var style = new Style(type, InnerGrid.Resources[type] as Style);
+            style.Setters.Add(setter);
+            InnerGrid.Resources[type] = style;
         }
 
         void InitGrid(int rowCount, int columnCount)
