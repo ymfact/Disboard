@@ -47,7 +47,7 @@ XAML으로 사용자 정의 컨트롤을 사용하려면 다음 작업을 통해
 
 #### Disgrid
 Disgrid를 사용하면 텍스트로 이루어진 표를 간단히 만들 수 있습니다.
-Yacht.cs의 GetBoardImage를 예제로써 참고하세요.
+BoardContext.cs의 GetBoardGrid를 예제로써 참고하세요.
 사용하려면 Main 함수 윗줄에 `[System.STAThread()]`를 추가해야 합니다.
 
 #### DM
