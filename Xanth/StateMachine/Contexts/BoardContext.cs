@@ -99,6 +99,7 @@ namespace Xanth
             grid.AddStyle<RowDefinition>(RowDefinition.MinHeightProperty, 80.0);
             grid.AddStyle<ColumnDefinition>(ColumnDefinition.MinWidthProperty, 80.0);
 
+            // 그리드 전역에 스타일을 추가할 수 있습니다.
             grid.AddStyle<Label>(Label.FontSizeProperty, 12.0);
 
             var darkBrushes = new[] { "#01326B".Brush(), "#6B0900".Brush() };
@@ -106,6 +107,7 @@ namespace Xanth
 
             foreach (var (row, banned) in BannedOnRows.Enumerate())
             {
+                // 레이블 각각에도 스타일을 추가할 수 있습니다.
                 var label = grid.Add(1 + row, 0, $"{banned}");
                 label.FontWeight = FontWeights.Bold;
                 label.FontSize = 18;
