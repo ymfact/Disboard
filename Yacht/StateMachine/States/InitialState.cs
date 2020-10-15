@@ -11,7 +11,7 @@ namespace Yacht
         public static InitialState New(GameContext context, IReadOnlyList<Player> initialPlayers)
             => new InitialState(
                 context: context,
-                players: initialPlayers.OrderBy(_ => Random.Next()).ToList()
+                players: initialPlayers
                 );
 
         public IReadOnlyList<Player> Players { get; }

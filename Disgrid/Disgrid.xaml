@@ -11,6 +11,7 @@
             <d:Label Content="Label" Grid.Row="0" Grid.Column="0"/>
             <d:Label Content="Label" Grid.Row="1" Grid.Column="1"/>
             <d:Label Content="Label" Grid.Row="2" Grid.Column="1"/>
+            <d:Label Content="Label&#x0a;asdf" Grid.Row="1" Grid.Column="2"/>
             <d:Label Content="Lable Clipping Test" Grid.Row="2" Grid.Column="2"/>
             <d:Grid.RowDefinitions>
                 <RowDefinition/>
@@ -27,6 +28,12 @@
                     <Setter Property="Foreground" Value="White"/>
                     <Setter Property="VerticalContentAlignment" Value="Center"/>
                     <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                </Style>
+                <Style TargetType="RowDefinition">
+                    <Setter Property="Height" Value="100"/>
+                </Style>
+                <Style TargetType="ColumnDefinition">
+                    <Setter Property="Width" Value="100"/>
                 </Style>
             </Grid.Resources>
         </Grid>

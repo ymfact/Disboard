@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Yacht.States;
 using static Disboard.Macro;
 
 namespace Yacht
@@ -71,13 +70,11 @@ namespace Yacht
 
         async Task<GameState> Submit(string message)
         {
-            Debug.Assert(CurrentPlayer != null);
-
             var split = message.Split();
             var scoreBoard = Board.ScoreBoardDict[CurrentPlayer];
             if (split.Length != 2)
             {
-                await ctx.Send(W("이니셜을 입력하세요.예시: S 3k"));
+                await ctx.Send(W("이니셜을 입력하세요. 예시: S 3k"));
                 return this;
             }
             var initial = split[1];
@@ -86,7 +83,7 @@ namespace Yacht
                 scoreBoard.Submit(initial, Turn.CurrentDices);
                 return await ProceedAndStartTurn();
             }
-            catch (System.InvalidOperationException)
+            catch (InvalidOperationException)
             {
                 await ctx.Send(W("이미 점수를 채운 항목입니다."));
                 return this;
@@ -106,7 +103,7 @@ namespace Yacht
             }
             else
             {
-                int newPlayerIndex = Turn.CurrentPlayerIndex;
+                int newPlayerIndex = Turn.CurrentPlayerIndex + 1;
                 if (newPlayerIndex >= Board.Players.Count)
                 {
                     newPlayerIndex = 0;
@@ -132,14 +129,11 @@ namespace Yacht
 
         async Task PrintTurn()
         {
-            var currentPlayer = CurrentPlayer;
-            Debug.Assert(currentPlayer != null);
-
             await ctx.SendImage(ctx.Render(() => Board.GetBoardGrid((CurrentPlayer, Turn.CurrentDices))));
 
             var checkTexts = Enumerable.Range(0, 3).Reverse().Select(_ => _ < Turn.CurrentRemainReroll).Select(_ => _ ? ":arrows_counterclockwise:" : ":ballot_box_with_check:");
             var checkString = string.Join(" ", checkTexts);
-            var turnIndicator = $"{currentPlayer.Mention} {currentPlayer.Name}'s turn, Reroll: " + checkString;
+            var turnIndicator = $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn, Reroll: " + checkString;
             await ctx.Send(turnIndicator);
 
             var diceTextTemplates = new List<string> { ":zero:", ":one:", ":two:", ":three:", ":four:", ":five:", ":six:" };

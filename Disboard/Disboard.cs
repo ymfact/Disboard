@@ -54,13 +54,14 @@ namespace Disboard
         {
             if(users.Count() == 0)
             {
-                users = channel.Guild.Members.Where(_ => !_.IsBot && !_.IsCurrent && _.Presence.Status == UserStatus.Online);
+                users = channel.Guild.Members.Where(_ => !_.IsBot && !_.IsCurrent && _.Presence != null && _.Presence.Status == UserStatus.Online);
                 await channel.SendMessageAsync("`참가 인원을 입력하지 않는 경우, 현재 온라인인 유저들로 게임이 시작됩니다.`");
             }
             var userIds = users.Select(_ => _.Id);
             var members = channel.Guild.Members.Where(_ => userIds.Contains(_.Id));
             var dMChannels = await Task.WhenAll(members.Select(_ => _.CreateDmChannelAsync()));
-            var players = members.Zip(dMChannels).Select(_ => new Player(_.First, _.Second)).ToList();
+            var random = new Random();
+            var players = members.Zip(dMChannels).Select(_ => new Player(_.First, _.Second)).OrderBy(_ => random.Next()).ToList();
             var gameInitializeData = new GameInitializeData(channel, players, OnFinish, Application.Dispatcher);
             Game game = GameConstructor(gameInitializeData);
             var semaphore = new Semaphore();

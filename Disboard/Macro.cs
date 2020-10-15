@@ -1,7 +1,17 @@
-﻿namespace Disboard
+﻿using System.Windows.Media;
+
+namespace Disboard
 {
     public static class Macro
     {
+        public static Color Color(this string html)
+        {
+            var color = System.Drawing.ColorTranslator.FromHtml(html);
+            return System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B);
+        }
+        public static Brush Brush(this string html)
+            => new SolidColorBrush(html.Color());
+
         /// <summary>
         /// Red
         /// </summary>

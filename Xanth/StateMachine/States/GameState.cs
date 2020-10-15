@@ -2,7 +2,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Yacht
+namespace Xanth
 {
     abstract class GameState
     {
