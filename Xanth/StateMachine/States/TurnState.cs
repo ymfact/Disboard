@@ -106,7 +106,7 @@ namespace Xanth
             }
             if (initials.Where(_ => _ != '!').Count() > Turn.RemainMove)
             {
-                await ctx.Send(W($"마지막으로 굴린 주사위 개수 만큼만 이동할 수 있습니다. 이번에는 {Turn.RemainMove}칸 이동할 수 있습니다."));
+                await ctx.Send(W($"마지막으로 굴린 주사위 개수까지만 이동할 수 있습니다. 이번에는 {Turn.RemainMove}칸까지 이동할 수 있습니다."));
                 return this;
             }
             try
@@ -126,7 +126,7 @@ namespace Xanth
             }
             catch (InvalidOperationException)
             {
-                await ctx.Send(W("잘못 입력했습니다. 이동할 방향을 입력하세요. 이동 후 쓰지 않으려면 문자 뒤에 !를 입력합니다. 예시: S w!asd"));
+                await ctx.Send(W("잘못 입력했습니다. 이동할 방향을 입력하세요. 이동 후 보드에 쓰지 않으려면 문자 뒤에 !를 입력합니다. 예시: S w!asd"));
                 return this;
             }
         }
@@ -167,10 +167,13 @@ namespace Xanth
             await ctx.SendImage(ctx.Render(() => Board.GetBoardGrid()));
 
             var rerollTexts = Enumerable.Range(0, Turn.RemainReroll).Select(_ => ":arrows_counterclockwise:");
-            var rerollString = rerollTexts.Count() > 0 ? string.Join(" ", rerollTexts) : ":ballot_box_with_check:";
+            var rerollString = string.Join(" ", rerollTexts);
             var moveTexts = Enumerable.Range(0, Turn.RemainMove).Select(_ => ":arrow_right:");
             var moveString = string.Join(" ", moveTexts);
-            var turnIndicator = $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn, Reroll: {rerollString}, Move: {moveString}";
+            var turnIndicator = $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn, ";
+            if(Turn.RemainReroll > 0)
+                turnIndicator += $"Reroll: {rerollString} or ";
+            turnIndicator += $"Move: {moveString}";
             await ctx.Send(turnIndicator);
 
             var diceTextTemplates = new List<string> { ":zero:", ":one:", ":two:", ":three:", ":four:", ":five:", ":six:" };
