@@ -117,8 +117,8 @@ namespace Xanth
             // 그리드 전역에 스타일을 추가할 수 있습니다.
             grid.AddStyle<Label>(Label.FontSizeProperty, 12.0);
 
-            var darkBrushes = new[] { "#01326B".Brush(), "#6B0900".Brush() };
-            var brushes = new[] { "#005AC2".Brush(), "#C21000".Brush() };
+            var darkBrushes = Players.Count == 2 ? new[] { "#01326B".Brush(), "#6B0900".Brush() } : new[] { "#6B0A00".Brush(), "#6B5D0B".Brush(), "#0B6B37".Brush(), "#0E056B".Brush() };
+            var brushes = Players.Count == 2 ? new[] { "#005AC2".Brush(), "#C21000".Brush() } : new[] { "#C21200".Brush(), "#C2A813".Brush(), "#13C264".Brush(), "#190AC2".Brush() };
             var transparentWhite = "#99AAAAAA".Brush();
 
             foreach (var (row, banned) in BannedOnRows.Enumerate())
