@@ -11,8 +11,8 @@ namespace Yacht
         protected GameState(GameContext context)
             => ctx = context;
 
-        public virtual Task<GameState> OnStart() => Task.FromResult(this);
-        public virtual Task<GameState> OnGroup(Player player, string message) => Task.FromResult(this);
+        public virtual GameState OnStart() => this;
+        public virtual GameState OnGroup(Player player, string message) => this;
 
         protected static Random Random { get; } = new Random();
     }

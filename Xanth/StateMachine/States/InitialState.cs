@@ -19,16 +19,16 @@ namespace Xanth
         InitialState(GameContext ctx, IReadOnlyList<Player> players) : base(ctx)
             => Players = players;
 
-        public override async Task<GameState> OnStart()
+        public override GameState OnStart()
         {
             if (Players.Count != 2)
             {
-                await ctx.Send("`Xanth는 2인으로만 플레이 가능합니다.`");
+                ctx.Send("`Xanth는 2인으로만 플레이 가능합니다.`");
                 ctx.OnFinish();
                 return this;
             }
 
-            return await TurnState.From(this);
+            return TurnState.From(this);
         }
     }
 }

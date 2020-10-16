@@ -10,44 +10,44 @@ namespace Yacht
 {
     partial class TurnState : GameState
     {
-        public static async Task<TurnState> From(InitialState prev)
+        public static TurnState From(InitialState prev)
         {
             var board = BoardContext.New(prev.Players);
             var turn = TurnContext.New();
-            var next = await StartTurn(prev.ctx, board, turn);
+            var next = StartTurn(prev.ctx, board, turn);
 
-            await next.ctx.Send("`명령어: R 23456, S 4k`");
+            next.ctx.Send("`명령어: R 23456, S 4k`");
             return next;
         }
 
-        public override async Task<GameState> OnGroup(Player player, string message)
+        public override GameState OnGroup(Player player, string message)
         {
             if (player == CurrentPlayer)
             {
                 var split = message.Split();
                 if (split.Length > 0 && split[0].ToLower() == "r")
                 {
-                    return await Reroll(message);
+                    return Reroll(message);
                 }
                 else if (split.Length > 0 && split[0].ToLower() == "s")
                 {
-                    return await Submit(message);
+                    return Submit(message);
                 }
             }
             return this;
         }
 
-        async Task<TurnState> Reroll(string message)
+        TurnState Reroll(string message)
         {
             if (Turn.CurrentRemainReroll <= 0)
             {
-                await ctx.Send(W("남은 리롤 기회가 없습니다. 점수를 적을 항목을 선택하세요. 예시: S 3k"));
+                ctx.Send(W("남은 리롤 기회가 없습니다. 점수를 적을 항목을 선택하세요. 예시: S 3k"));
                 return this;
             }
             var split = message.Split();
             if (split.Length != 2)
             {
-                await ctx.Send(W("리롤할 주사위를 입력하세요. 예시: R 334"));
+                ctx.Send(W("리롤할 주사위를 입력하세요. 예시: R 334"));
                 return this;
             }
             try
@@ -58,48 +58,48 @@ namespace Yacht
                    board: Board,
                    turn: Turn.Reroll(dicesToReroll)
                    );
-                await next.PrintTurn();
+                next.PrintTurn();
                 return next;
             }
             catch (System.FormatException)
             {
-                await ctx.Send(W("리롤할 주사위를 다시 입력하세요. 예시: R 334"));
+                ctx.Send(W("리롤할 주사위를 다시 입력하세요. 예시: R 334"));
                 return this;
             }
         }
 
-        async Task<GameState> Submit(string message)
+        GameState Submit(string message)
         {
             var split = message.Split();
             var scoreBoard = Board.ScoreBoardDict[CurrentPlayer];
             if (split.Length != 2)
             {
-                await ctx.Send(W("이니셜을 입력하세요. 예시: S 3k"));
+                ctx.Send(W("이니셜을 입력하세요. 예시: S 3k"));
                 return this;
             }
             var initial = split[1];
             try
             {
                 scoreBoard.Submit(initial, Turn.CurrentDices);
-                return await ProceedAndStartTurn();
+                return ProceedAndStartTurn();
             }
             catch (InvalidOperationException)
             {
-                await ctx.Send(W("이미 점수를 채운 항목입니다."));
+                ctx.Send(W("이미 점수를 채운 항목입니다."));
                 return this;
             }
             catch (CommandNotFoundException)
             {
-                await ctx.Send(W("올바른 이니셜을 입력하세요. 예시: S 3k"));
+                ctx.Send(W("올바른 이니셜을 입력하세요. 예시: S 3k"));
                 return this;
             }
         }
 
-        async Task<GameState> ProceedAndStartTurn()
+        GameState ProceedAndStartTurn()
         {
             if (Board.ScoreBoardDict.Values.All(_ => _.Places.Values.All(_ => _.IsOpen == false)))
             {
-                return await FinalState.From(this);
+                return FinalState.From(this);
             }
             else
             {
@@ -108,38 +108,38 @@ namespace Yacht
                 {
                     newPlayerIndex = 0;
                 }
-                return await StartTurn(newPlayerIndex);
+                return StartTurn(newPlayerIndex);
             }
         }
 
-        Task<TurnState> StartTurn(int nextPlayerIndex)
+        TurnState StartTurn(int nextPlayerIndex)
             => StartTurn(ctx, Board, Turn.Next(nextPlayerIndex));
 
-        static async Task<TurnState> StartTurn(GameContext ctx, BoardContext board, TurnContext turn)
+        static TurnState StartTurn(GameContext ctx, BoardContext board, TurnContext turn)
         {
             TurnState next = new TurnState(
                    ctx: ctx,
                    board: board,
                    turn: turn
                    );
-            await next.PrintTurn();
+            next.PrintTurn();
             return next;
         }
 
 
-        async Task PrintTurn()
+        void PrintTurn()
         {
-            await ctx.SendImage(ctx.Render(() => Board.GetBoardGrid((CurrentPlayer, Turn.CurrentDices))));
+            ctx.SendImage(ctx.Render(() => Board.GetBoardGrid((CurrentPlayer, Turn.CurrentDices))));
 
             var checkTexts = Enumerable.Range(0, 3).Reverse().Select(_ => _ < Turn.CurrentRemainReroll).Select(_ => _ ? ":arrows_counterclockwise:" : ":ballot_box_with_check:");
             var checkString = string.Join(" ", checkTexts);
             var turnIndicator = $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn, Reroll: " + checkString;
-            await ctx.Send(turnIndicator);
+            ctx.Send(turnIndicator);
 
             var diceTextTemplates = new List<string> { ":zero:", ":one:", ":two:", ":three:", ":four:", ":five:", ":six:" };
             var diceTexts = Turn.CurrentDices.Select(_ => diceTextTemplates[_]);
             var diceString = string.Join(" ", diceTexts);
-            await ctx.Send(diceString);
+            ctx.Send(diceString);
         }
     }
 

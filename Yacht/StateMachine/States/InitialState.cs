@@ -19,7 +19,7 @@ namespace Yacht
         InitialState(GameContext context, IReadOnlyList<Player> players) : base(context)
             => Players = players;
 
-        public override async Task<GameState> OnStart()
-            => await TurnState.From(this);
+        public override GameState OnStart()
+            => TurnState.From(this);
     }
 }
