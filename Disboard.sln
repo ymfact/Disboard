@@ -16,7 +16,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EchoVisual", "EchoVisual\Ec
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Disgrid", "Disgrid\Disgrid.csproj", "{09483DB5-E9B8-4D0E-912A-863BF1522E64}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xanth", "Xanth\Xanth.csproj", "{ED5E26C3-6DA2-463B-A5FA-6732425B9FD5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xanth", "Xanth\Xanth.csproj", "{ED5E26C3-6DA2-463B-A5FA-6732425B9FD5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vechu", "Vechu\Vechu.csproj", "{8099350C-CA02-4186-B7DF-2A5542A29FA0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,6 +50,10 @@ Global
 		{ED5E26C3-6DA2-463B-A5FA-6732425B9FD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ED5E26C3-6DA2-463B-A5FA-6732425B9FD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ED5E26C3-6DA2-463B-A5FA-6732425B9FD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8099350C-CA02-4186-B7DF-2A5542A29FA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8099350C-CA02-4186-B7DF-2A5542A29FA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8099350C-CA02-4186-B7DF-2A5542A29FA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8099350C-CA02-4186-B7DF-2A5542A29FA0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
