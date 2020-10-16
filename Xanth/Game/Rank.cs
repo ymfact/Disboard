@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Xanth
@@ -28,7 +27,7 @@ namespace Xanth
 
         static IList<ISet<int>> ThreeStraights { get; } = new[] { new SortedSet<int> { 1, 2, 3 }, new SortedSet<int> { 2, 3, 4 }, new SortedSet<int> { 3, 4, 5 }, new SortedSet<int> { 4, 5, 6 } };
         static IList<ISet<int>> FourStraights { get; } = new[] { new SortedSet<int> { 1, 2, 3, 4 }, new SortedSet<int> { 2, 3, 4, 5 }, new SortedSet<int> { 3, 4, 5, 6 } };
-        
+
         public static Rank Calculate(int[] dices)
         {
             if (dices.GroupBy(_ => _).Any(_ => _.Count() == 4))

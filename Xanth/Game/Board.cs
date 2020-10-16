@@ -5,7 +5,7 @@ namespace Xanth
 {
     class Board
     {
-        public readonly IReadOnlyList<IReadOnlyList<Slot>> Slots;
+        public IReadOnlyList<IReadOnlyList<Slot>> Slots { get; }
         public Board(IEnumerable<int> bannedOnRows, IEnumerable<int> bannedOnColumns)
         {
             Slots = bannedOnRows.Select(bannedOnRow =>

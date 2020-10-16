@@ -1,11 +1,9 @@
 ﻿using Disboard;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 
 namespace Xanth
 {
@@ -29,8 +27,8 @@ namespace Xanth
             MarkerDict = players.Enumerate().ToDictionary(_ => _.elem, _ => markers[_.index]);
             NotMovedYet = players.ToDictionary(_ => _, _ => true);
 
-            var random = new Random();
-            Func<int> rollDice = () => random.Next(1, 7);
+            Random random = new Random();
+            int rollDice() => random.Next(1, 7);
             BannedOnRows = Enumerable.Range(0, 4).Select(_ => rollDice()).ToList();
             BannedOnColumns = Enumerable.Range(0, 4).Select(_ => rollDice()).ToList();
 
@@ -46,7 +44,7 @@ namespace Xanth
             {
                 if (NotMovedYet[currentPlayer] && i == 0)
                 {
-                    if(initials[0] == '!')
+                    if (initials[0] == '!')
                         continue;
 
                     var startSlot = Board.Slots[marker.Row][marker.Column];
@@ -71,11 +69,12 @@ namespace Xanth
                     throw new InvalidOperationException();
 
                 var slot = Board.Slots[marker.Row][marker.Column];
-                bool writable = slot.IsWritable(dices);
-                if (false == writable && slot.Owner != null && slot.Owner != currentPlayer)
+                bool isReachable = slot.GetPermission(currentPlayer, dices) >= Slot.Permission.Reachable;
+                if (false == isReachable)
                     throw new MoveProhibitedException();
 
-                if (writable && false == isSkipWriting)
+                bool isOverwritable = slot.GetPermission(currentPlayer, dices) == Slot.Permission.Overwritable;
+                if (false == isSkipWriting && isOverwritable)
                     slotsToWrite.Add(slot);
             }
 
@@ -88,14 +87,14 @@ namespace Xanth
             NotMovedYet[currentPlayer] = false;
         }
 
-        public Disgrid.Disgrid GetBoardGrid()
+        public Disgrid.Disgrid GetBoardGrid((int playerIndex, Dictionary<Slot, Slot.Permission> reachables)? CurrentState)
         {
             int rowCount = 1 + 4;
             int columnCount = 1 + 4;
             var grid = new Disgrid.Disgrid(rowCount, columnCount);
 
-            grid.InnerGrid.RowDefinitions[0].MinHeight = 20.0;
-            grid.InnerGrid.ColumnDefinitions[0].MinWidth = 20.0;
+            grid.InnerGrid.RowDefinitions[0].MinHeight = 30.0;
+            grid.InnerGrid.ColumnDefinitions[0].MinWidth = 30.0;
             grid.AddStyle<RowDefinition>(RowDefinition.MinHeightProperty, 80.0);
             grid.AddStyle<ColumnDefinition>(ColumnDefinition.MinWidthProperty, 80.0);
 
@@ -104,6 +103,7 @@ namespace Xanth
 
             var darkBrushes = new[] { "#01326B".Brush(), "#6B0900".Brush() };
             var brushes = new[] { "#005AC2".Brush(), "#C21000".Brush() };
+            var transparentWhite = "#99AAAAAA".Brush();
 
             foreach (var (row, banned) in BannedOnRows.Enumerate())
             {
@@ -122,16 +122,30 @@ namespace Xanth
 
             foreach (var (row, slots) in Board.Slots.Enumerate())
                 foreach (var (column, slot) in slots.Enumerate())
+                {
                     if (slot.Owner != null)
                     {
                         string text = $"{slot.Rank.Initial}\n";
-                        int playerIndex = Players.FindIndex(_ => _ == slot.Owner)!.Value;
-                        var brush = darkBrushes[playerIndex];
                         var label = grid.Add(1 + row, 1 + column, text);
-                        label.Background = brush;
+                        int ownerIndex = Players.FindIndex(_ => _ == slot.Owner)!.Value;
                         label.FontWeight = FontWeights.Bold;
                         label.FontSize = 14;
+                        label.Background = darkBrushes[ownerIndex];
                     }
+
+                    if (CurrentState.HasValue)
+                    {
+                        var border = grid.Add(1 + row, 1 + column, "");
+                        var reachability = CurrentState.Value.reachables.GetValueOrDefault(slot, Slot.Permission.Unreachable);
+                        if (reachability >= Slot.Permission.Reachable)
+                            border.BorderThickness = new Thickness(4);
+                        if (reachability == Slot.Permission.Reachable)
+                            border.BorderBrush = transparentWhite;
+                        if (reachability == Slot.Permission.Overwritable)
+                            border.BorderBrush = brushes[CurrentState.Value.playerIndex];
+
+                    }
+                }
 
             foreach (var (playerIndex, (player, marker)) in Players.Zip(Players.Select(_ => MarkerDict[_])).Enumerate())
             {

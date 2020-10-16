@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Xanth
+﻿namespace Xanth
 {
     class Program
     {

@@ -1,6 +1,6 @@
-﻿using System;
+﻿using DSharpPlus.Entities;
+using System;
 using System.Linq;
-using DSharpPlus.Entities;
 
 namespace Disboard
 {

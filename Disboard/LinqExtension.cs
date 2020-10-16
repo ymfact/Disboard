@@ -9,8 +9,10 @@ namespace Disboard
         public static IEnumerable<(int index, TSource elem)> Enumerate<TSource>(this IEnumerable<TSource> source)
             => source.Select((elem, index) => (index, elem));
 
-        public static int? FindIndex<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) {
-            try {
+        public static int? FindIndex<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate)
+        {
+            try
+            {
                 return source.Enumerate().First(_ => predicate(_.elem)).index;
             }
             catch (InvalidOperationException)

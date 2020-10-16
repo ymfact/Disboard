@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace Disboard
+﻿namespace Disboard
 {
     public abstract class Game : GameContext
     {

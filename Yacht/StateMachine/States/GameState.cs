@@ -1,6 +1,5 @@
 ﻿using Disboard;
 using System;
-using System.Threading.Tasks;
 
 namespace Yacht
 {

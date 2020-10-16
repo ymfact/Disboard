@@ -12,8 +12,8 @@ using System.Windows.Controls;
 
 namespace Disboard
 {
-    using GuildIdType = UInt64;
     using ChannelIdType = UInt64;
+    using GuildIdType = UInt64;
     using UserIdType = UInt64;
 
     public delegate void SendType(string message, DiscordEmbed? embed = null);
@@ -53,7 +53,7 @@ namespace Disboard
 
         async Task NewGame(DiscordChannel channel, IEnumerable<DiscordUser> users)
         {
-            if(users.Count() == 0)
+            if (users.Count() == 0)
             {
                 users = channel.Guild.Members.Where(_ => !_.IsBot && !_.IsCurrent && _.Presence != null && _.Presence.Status == UserStatus.Online);
                 await channel.SendMessageAsync("`참가 인원을 입력하지 않는 경우, 현재 온라인인 유저들로 게임이 시작됩니다.`");
@@ -88,7 +88,7 @@ namespace Disboard
                 foreach (var messageTask in messageQueue)
                     await messageTask;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Log(e.ToString());
             }
@@ -112,7 +112,7 @@ namespace Disboard
 
         Task Ready(ReadyEventArgs _)
         {
-            Func<Task> OnReady = async () =>
+            async Task OnReady()
             {
                 var channels = (await Task.WhenAll(_.Client.Guilds.Values.Select(_ => GetDebugChannels(_)))).SelectMany(_ => _);
                 await Task.WhenAll(channels.Select(async channel =>
@@ -176,7 +176,7 @@ namespace Disboard
             {
                 return;
             }
-            if(message.MessageType != MessageType.Default)
+            if (message.MessageType != MessageType.Default)
             {
                 return;
             }
@@ -187,7 +187,7 @@ namespace Disboard
                 if (game is GameUsesDM)
                 {
                     var player = game.InitialPlayers.Where(_ => _.Id == authorId).FirstOrDefault();
-                    if(player != null)
+                    if (player != null)
                     {
                         try
                         {
@@ -206,7 +206,7 @@ namespace Disboard
                     await channel.SendMessageAsync("`진행중인 게임이 없습니다.`");
                 }
             }
-            if(channel.Type == ChannelType.Text || channel.Type == ChannelType.Group)
+            if (channel.Type == ChannelType.Text || channel.Type == ChannelType.Group)
             {
                 var guild = __.Guild;
                 var game = Games.GetValueOrDefault(channel.Id);
@@ -214,7 +214,7 @@ namespace Disboard
                 if (split.Length > 0 && split[0].ToLower() == "bot")
                 {
                     GuildIdType guildId = guild.Id;
-                    var mentionedUsers = __.MentionedUsers.Distinct().Where(_=>!_.IsCurrent);
+                    var mentionedUsers = __.MentionedUsers.Distinct().Where(_ => !_.IsCurrent);
                     if (split.Length > 1 && split[1].ToLower() == "start")
                     {
                         if (game == null)
@@ -257,7 +257,7 @@ namespace Disboard
                         {
                             await channel.SendMessageAsync("`진행중인 게임이 없습니다. BOT start @참가인원1 @참가인원2...는 어떨까요?`");
                         }
-                        else if(false == game is GameUsesDM)
+                        else if (false == game is GameUsesDM)
                         {
                             await channel.SendMessageAsync("`DM을 사용하지 않는 게임입니다.`");
                         }
@@ -296,7 +296,7 @@ namespace Disboard
                     if (game != null)
                     {
                         var player = game.InitialPlayers.Where(_ => _.Id == authorId).FirstOrDefault();
-                        if(player != null)
+                        if (player != null)
                         {
                             try
                             {

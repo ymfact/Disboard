@@ -1,6 +1,4 @@
-﻿using System.Security.AccessControl;
-
-namespace Xanth
+﻿namespace Xanth
 {
     class Marker
     {

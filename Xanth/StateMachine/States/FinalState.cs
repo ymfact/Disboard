@@ -1,6 +1,5 @@
 ﻿using Disboard;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Xanth
 {
@@ -8,7 +7,7 @@ namespace Xanth
     {
         public static FinalState From(TurnState prev)
         {
-            prev.ctx.SendImage(prev.ctx.Render(() => prev.Board.GetBoardGrid()));
+            prev.ctx.SendImage(prev.ctx.Render(() => prev.Board.GetBoardGrid(null)));
             var scores = prev.Board.Board.Slots.SelectMany(_ => _).GroupBy(_ => _.Owner).Select(_ => (_.Key, _.Count()));
             var highestScore = scores.OrderByDescending(_ => _.Item2).First().Item2;
             var winners = scores.Where(_ => _.Item2 == highestScore).Select(_ => _.Key!.Name);

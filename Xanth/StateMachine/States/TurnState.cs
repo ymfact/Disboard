@@ -1,21 +1,21 @@
 ﻿using Disboard;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using static Disboard.Macro;
 
 namespace Xanth
 {
-    class TurnState : GameState
+    partial class TurnState : GameState
     {
         static public TurnState From(InitialState prev)
         {
+            prev.ctx.Send("O `No Pair` < P `One Pair` < 3 `Three Straight` < T `Triple` < 2P `Two Pair` < 4 `Four Straight` = X `Xanth`");
 
             var board = BoardContext.New(prev.Players);
             var turn = TurnContext.New();
             var next = StartTurn(ctx: prev.ctx, board: board, turn: turn);
 
-            next.ctx.Send("`명령어: R 234, S wasd  이동 후 쓰지 않으려면 !를 입력합니다. 예시: S w!asd`");
+            next.ctx.Send("`명령어: R 234, S wasd  이동 후 보드에 쓰지 않으려면 문자 뒤에 !를 입력합니다. 예시: S w!asd`");
             return next;
         }
 
@@ -89,7 +89,7 @@ namespace Xanth
         GameState Submit(string message)
         {
             var split = message.Split();
-            if(split.Length == 1)
+            if (split.Length == 1)
             {
                 ctx.Send(W("이동할 방향을 입력하세요. 예시: S wasd  턴을 마치려면 S !를 입력하세요."));
                 return this;
@@ -164,16 +164,18 @@ namespace Xanth
 
         void PrintTurn()
         {
-            ctx.SendImage(ctx.Render(() => Board.GetBoardGrid()));
+            ctx.SendImage(ctx.Render(() => Board.GetBoardGrid((Turn.PlayerIndex, GetReachables()))));
 
+            var rank = Rank.Calculate(Turn.Dices);
             var rerollTexts = Enumerable.Range(0, Turn.RemainReroll).Select(_ => ":arrows_counterclockwise:");
             var rerollString = string.Join(" ", rerollTexts);
             var moveTexts = Enumerable.Range(0, Turn.RemainMove).Select(_ => ":arrow_right:");
             var moveString = string.Join(" ", moveTexts);
             var turnIndicator = $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn, ";
-            if(Turn.RemainReroll > 0)
+            if (Turn.RemainReroll > 0)
                 turnIndicator += $"Reroll: {rerollString}, ";
             turnIndicator += $"Move: {moveString}";
+            turnIndicator += $"\nDices: {rank.Initial} `{rank.Name}`";
             ctx.Send(turnIndicator);
 
             var diceTextTemplates = new List<string> { ":zero:", ":one:", ":two:", ":three:", ":four:", ":five:", ":six:" };
