@@ -1,6 +1,4 @@
 ﻿using Disboard;
-using System.Threading.Tasks;
-
 class Echo : Game
 {
     public Echo(GameInitializeData initData) : base(initData) { }
