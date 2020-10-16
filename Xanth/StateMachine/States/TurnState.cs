@@ -15,7 +15,7 @@ namespace Xanth
             var turn = TurnContext.New();
             var next = StartTurn(ctx: prev.ctx, board: board, turn: turn);
 
-            next.ctx.Send("`명령어: R 234, S wasd  이동 후 보드에 쓰지 않으려면 문자 뒤에 !를 입력합니다. 예시: S w!asd`");
+            next.ctx.Send("`명령어: R 234, S wasd  턴을 넘기려면 S !, 이동 후 보드에 쓰지 않으려면 문자 뒤에 !를 입력합니다. 예시: S w!asd`");
             return next;
         }
 
@@ -54,7 +54,7 @@ namespace Xanth
         {
             if (Turn.RemainReroll <= 0)
             {
-                ctx.Send(W("남은 리롤 기회가 없습니다. 이동할 방향을 입력하세요. 예시: S wasd"));
+                ctx.Send(W("남은 리롤 기회가 없습니다. 이동할 방향을 입력하세요. 턴을 넘기려면 S !, 이동 후 보드에 쓰지 않으려면 문자 뒤에 !를 입력합니다. 예시: S w!asd"));
                 return this;
             }
             var split = message.Split();
@@ -91,12 +91,12 @@ namespace Xanth
             var split = message.Split();
             if (split.Length == 1)
             {
-                ctx.Send(W("이동할 방향을 입력하세요. 예시: S wasd  턴을 마치려면 S !를 입력하세요."));
+                ctx.Send(W("이동할 방향을 입력하세요. 턴을 넘기려면 S !, 이동 후 보드에 쓰지 않으려면 문자 뒤에 !를 입력합니다. 예시: S w!asd"));
                 return this;
             }
             if (split.Length > 2)
             {
-                ctx.Send(W("이동할 방향을 입력하세요. 예시: S wasd"));
+                ctx.Send(W("이동할 방향을 입력하세요. 턴을 넘기려면 S !, 이동 후 보드에 쓰지 않으려면 문자 뒤에 !를 입력합니다. 예시: S w!asd"));
                 return this;
             }
             var initials = split[1];
@@ -124,9 +124,9 @@ namespace Xanth
                 ctx.Send(W("보드 바깥으로 이동하려 했습니다."));
                 return this;
             }
-            catch (InvalidOperationException)
+            catch (InvalidKeywordException)
             {
-                ctx.Send(W("잘못 입력했습니다. 이동할 방향을 입력하세요. 이동 후 보드에 쓰지 않으려면 문자 뒤에 !를 입력합니다. 예시: S w!asd"));
+                ctx.Send(W("잘못 입력했습니다. 이동할 방향을 입력하세요.턴을 넘기려면 S !, 이동 후 보드에 쓰지 않으려면 문자 뒤에 !를 입력합니다. 예시: S w!asd"));
                 return this;
             }
         }

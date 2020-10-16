@@ -78,7 +78,11 @@ namespace Xanth
                 else if (direction == 'd')
                     marker = marker.Move(0, +1);
                 else
-                    throw new InvalidOperationException();
+                    throw new InvalidKeywordException();
+
+                bool overlapped = Players.Where(_ => _ != currentPlayer).Select(_ => MarkerDict[_]).Select(_ => (_.Row, _.Column)).Any(_ => _ == (marker.Row, marker.Column));
+                if (overlapped)
+                    throw new MoveProhibitedException();
 
                 var slot = Board.Slots[marker.Row][marker.Column];
                 bool isReachable = slot.GetPermission(currentPlayer, dices) >= Slot.Permission.Reachable;

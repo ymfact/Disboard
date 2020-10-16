@@ -19,10 +19,10 @@ namespace Xanth
         public static Rank Empty = new Rank("Empty", "", 0);
         public static Rank NoPair = new Rank("No Pair", "O", 1);
         public static Rank OnePair = new Rank("One Pair", "P", 2);
-        public static Rank ThreeStraight = new Rank("3 Straight", "3", 3);
+        public static Rank ThreeStraight = new Rank("Three Straight", "3", 3);
         public static Rank Triple = new Rank("Triple", "T", 4);
         public static Rank TwoPair = new Rank("Two Pair", "2P", 5);
-        public static Rank FourStraight = new Rank("4 Straight", "4", 6);
+        public static Rank FourStraight = new Rank("Four Straight", "4", 6);
         public static Rank Xanth = new Rank("Xanth", "X", 6);
 
         static IList<ISet<int>> ThreeStraights { get; } = new[] { new SortedSet<int> { 1, 2, 3 }, new SortedSet<int> { 2, 3, 4 }, new SortedSet<int> { 3, 4, 5 }, new SortedSet<int> { 4, 5, 6 } };

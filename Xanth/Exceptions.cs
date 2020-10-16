@@ -6,7 +6,7 @@
     class MoveProhibitedException : System.InvalidOperationException
     {
     }
-    class InvalidOperationException : System.InvalidOperationException
+    class InvalidKeywordException : System.InvalidOperationException
     {
     }
 }
