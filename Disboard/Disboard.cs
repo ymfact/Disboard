@@ -177,7 +177,7 @@ namespace Disboard
             var author = __.Author;
             var authorId = author.Id;
             var message = __.Message;
-            var content = message.Content;
+            var content = string.Join(' ', message.Content.Split(' ').Where(_ => _ != ""));
 
             if (author.IsCurrent)
             {
@@ -217,16 +217,16 @@ namespace Disboard
             {
                 var guild = __.Guild;
                 var game = Games.GetValueOrDefault(channel.Id);
-                string[] split = content.Split(" ");
-                if (split.Length > 0 && split[0].ToLower() == "bot")
+                var split = content.Split(" ").ToList();
+                if (split.Count > 0 && split[0].ToLower() == "bot")
                 {
                     GuildIdType guildId = guild.Id;
                     var mentionedUsers = __.MentionedUsers.Distinct().Where(_ => !_.IsCurrent);
-                    if (split.Length > 1 && split[1].ToLower() == "start")
+                    if (split.Count > 1 && split[1].ToLower() == "start")
                     {
                         if (game == null)
                         {
-                            if (mentionedUsers.Count() == split.Length - 2)
+                            if (mentionedUsers.Count() == split.Count - 2)
                             {
                                 await NewGame(channel, mentionedUsers);
                             }
@@ -240,7 +240,7 @@ namespace Disboard
                             await channel.SendMessageAsync("`진행중인 게임이 있습니다. BOT restart @참가인원1 @참가인원2...는 어떨까요?`");
                         }
                     }
-                    else if (split.Length > 1 && split[1].ToLower() == "restart")
+                    else if (split.Count > 1 && split[1].ToLower() == "restart")
                     {
                         if (game == null)
                         {
@@ -248,7 +248,7 @@ namespace Disboard
                         }
                         else
                         {
-                            if (mentionedUsers.Count() == split.Length - 2)
+                            if (mentionedUsers.Count() == split.Count - 2)
                             {
                                 await NewGame(channel, mentionedUsers);
                             }
@@ -258,7 +258,7 @@ namespace Disboard
                             }
                         }
                     }
-                    else if (split.Length > 1 && split[1].ToLower() == "restoredm")
+                    else if (split.Count > 1 && split[1].ToLower() == "restoredm")
                     {
                         if (game == null)
                         {
