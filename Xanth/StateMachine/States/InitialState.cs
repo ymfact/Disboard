@@ -18,14 +18,16 @@ namespace Xanth
 
         public override GameState OnStart()
         {
-            if (Players.Count != 2)
+            if (Players.Count == 2 || Players.Count == 4)
             {
-                ctx.Send("`Xanth는 2인으로만 플레이 가능합니다.`");
+                return TurnState.From(this);
+            }
+            else
+            {
+                ctx.Send("`Xanth는 2인, 4인으로만 플레이 가능합니다.`");
                 ctx.OnFinish();
                 return this;
             }
-
-            return TurnState.From(this);
         }
     }
 }

@@ -15,6 +15,7 @@ namespace Xanth
         public Board Board { get; }
         public Dictionary<Player, Marker> MarkerDict { get; }
         public Dictionary<Player, bool> NotMovedYet { get; }
+        public int BoardSize { get; }
 
         public static BoardContext New(IReadOnlyList<Player> players)
             => new BoardContext(players);
@@ -23,14 +24,25 @@ namespace Xanth
         {
             Players = players;
 
-            var markers = new[] { new Marker(3, 0), new Marker(0, 3) };
+            IList<Marker> markers;
+            if (players.Count == 2)
+            {
+                BoardSize = 4;
+                markers = new[] { new Marker(3, 0, BoardSize), new Marker(0, 3, BoardSize) };
+            }
+            else
+            {
+                BoardSize = 6;
+                markers = new[] { new Marker(0, 5, BoardSize), new Marker(0, 0, BoardSize), new Marker(5, 0, BoardSize), new Marker(5, 5, BoardSize) };
+            }
+
             MarkerDict = players.Enumerate().ToDictionary(_ => _.elem, _ => markers[_.index]);
             NotMovedYet = players.ToDictionary(_ => _, _ => true);
 
             Random random = new Random();
             int rollDice() => random.Next(1, 7);
-            BannedOnRows = Enumerable.Range(0, 4).Select(_ => rollDice()).ToList();
-            BannedOnColumns = Enumerable.Range(0, 4).Select(_ => rollDice()).ToList();
+            BannedOnRows = Enumerable.Range(0, BoardSize).Select(_ => rollDice()).ToList();
+            BannedOnColumns = Enumerable.Range(0, BoardSize).Select(_ => rollDice()).ToList();
 
             Board = new Board(BannedOnRows, BannedOnColumns);
         }
@@ -89,8 +101,8 @@ namespace Xanth
 
         public Disgrid.Disgrid GetBoardGrid((int playerIndex, Dictionary<Slot, Slot.Permission> reachables)? CurrentState)
         {
-            int rowCount = 1 + 4;
-            int columnCount = 1 + 4;
+            int rowCount = 1 + BoardSize;
+            int columnCount = 1 + BoardSize;
             var grid = new Disgrid.Disgrid(rowCount, columnCount);
 
             grid.InnerGrid.RowDefinitions[0].MinHeight = 30.0;
