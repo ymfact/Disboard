@@ -112,8 +112,14 @@ namespace Disboard
 
         Task Ready(ReadyEventArgs _)
         {
+            if (IsInitialized)
+                return Task.CompletedTask;
+
             async Task OnReady()
             {
+                if (IsInitialized)
+                    return;
+
                 var channels = (await Task.WhenAll(_.Client.Guilds.Values.Select(_ => GetDebugChannels(_)))).SelectMany(_ => _);
                 await Task.WhenAll(channels.Select(async channel =>
                 {
@@ -121,6 +127,7 @@ namespace Disboard
                     DiscordUser[] empty = { };
                     await NewGame(channel, empty);
                 }));
+
                 IsInitialized = true;
             };
 
