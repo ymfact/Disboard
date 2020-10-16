@@ -58,3 +58,25 @@ IGameUsesDM을 상속하면 DM을 사용할 수 있습니다.
 
 #### debug
 채널 주제(Topic)에 대소문자 무관 `debug`를 포함시키면 봇을 실행할 때마다 게임이 시작됩니다.
+
+<hr/>
+
+#### C# Task
+메시지를 보내려면 Send를 호출합니다.
+Send는 Task를 반환하는 함수이며, await를 사용하여 메시지 전송 완료를 기다릴 수 있습니다.
+```csharp
+//위 예시의 Start 함수와 완전히 같은 동작을 합니다.
+public override async Task Start()
+{
+    await Send("`Echo Started.`");
+    return;
+}
+```
+
+Task를 통해 비동기 동작을 구현할 수 있습니다.
+반환형이 Task인 함수는 Task.CompletedTask나 다른 Task를 반환합니다.
+반환형이 Task\<T\>인 함수는 Task.FromResult(T)나 다른 Task\<T\>를 반환합니다.
+
+Task를 반환하는 함수가 async 키워드를사용하면, await를 사용할 수 있습니다.
+async 함수의 내부에서는 `await task;`나 `var result = await task;`를 이용해 다른 Task를 기다릴 수 있습니다.
+Task를 반환하는 async 함수는 void를, Task\<T\>를 반환하는 async 함수는 T를 return합니다.
