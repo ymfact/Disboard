@@ -2,7 +2,7 @@
 
 ### Online Text-Based Board Game Framework using Discord
 
-#### A simple example
+#### A simple example: Echo
 ```csharp
 using Disboard;
 
@@ -28,6 +28,14 @@ class Program
 플레이어 간 공유되지 않는 내용은 DM을 활용하여 구현합니다.
 
 봇을 실행하려면 토큰을 발급해야 합니다. https://discordpy.readthedocs.io/en/latest/discord.html 를 참고하세요.
+
+<hr/>
+
+레포지토리는 다음을 포함하고 있습니다.
+- 온라인 보드게임 프레임워크 __Disboard__
+- 표를 간단히 그려주는 라이브러리 __Disgrid__
+- 2개의 단순한 예제: __Echo__, __EchoVisual__
+- 3개의 간단한 게임: __Vechu__, __Xanth__, __Yacht__
 
 <hr/>
 
