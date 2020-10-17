@@ -36,6 +36,7 @@ class Program
 게임에 참가하지 않는 유저는 `BOT restart` 명령어 외에는 게임에 영향을 주지 않습니다.
 클라이언트는 채널마다 서로 다른 게임을 동시에 진행할 수 있습니다.
 한 플레이어는 여러 게임에 참가할 수 있습니다.
+IGameFactory를 구현하면 `BOT help` 명령어를 지원할 수 있습니다.
 
 #### Image from WPF Controls
 WPF 컨트롤을 사용하여 이미지를 그릴 수 있습니다. EchoVisual.cs를 예제로써 참고하세요.
