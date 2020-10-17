@@ -23,7 +23,7 @@ namespace Disboard
 
     public sealed class Disboard<GameFactoryType> where GameFactoryType : IGameFactory, new()
     {
-        volatile bool IsInitialized = false;
+        bool IsInitialized = false;
 
         IGameFactory GameFactory { get; } = new GameFactoryType();
         Application Application { get; } = new Application();
