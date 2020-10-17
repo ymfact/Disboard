@@ -13,17 +13,11 @@ class Echo : Game
     public override void OnGroup(Player player, string message) => Send(message);
 }
 
-class EchoFactory : IGameFactory
-{
-    public Game New(GameInitializeData initData) => new Echo(initData);
-    public void OnHelp(Channel channel) => channel.Send("`Echo`");
-}
-
 class Program
 {
     static void Main()
     {
-        var disboard = new Disboard<EchoFactory>();
+        var disboard = new Disboard<GameFactory<Echo>>();
         disboard.Run("TOKEN");
     }
 }
