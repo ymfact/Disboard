@@ -1,4 +1,5 @@
 ﻿using Disboard;
+using DSharpPlus.Entities;
 using System.Collections.Generic;
 using System.Linq;
 using static Disboard.Macro;
@@ -163,24 +164,26 @@ namespace Xanth
 
         void PrintTurn()
         {
-            ctx.SendImage(ctx.Render(() => Board.GetBoardGrid((Turn.PlayerIndex, GetReachables()))));
+            var image = ctx.Render(() => Board.GetBoardGrid((Turn.PlayerIndex, GetReachables())));
 
             var rank = Rank.Calculate(Turn.Dices);
             var rerollTexts = Enumerable.Range(0, Turn.RemainReroll).Select(_ => ":arrows_counterclockwise:");
             var rerollString = string.Join(" ", rerollTexts);
             var moveTexts = Enumerable.Range(0, Turn.RemainMove).Select(_ => ":arrow_right:");
             var moveString = string.Join(" ", moveTexts);
-            var turnIndicator = $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn, ";
-            if (Turn.RemainReroll > 0)
-                turnIndicator += $"Reroll: {rerollString}, ";
-            turnIndicator += $"Move: {moveString}";
-            turnIndicator += $"\nDices: {rank.Initial} `{rank.Name}`";
-            ctx.Send(turnIndicator);
 
             var diceTextTemplates = new List<string> { ":zero:", ":one:", ":two:", ":three:", ":four:", ":five:", ":six:" };
             var diceTexts = Turn.Dices.Select(_ => diceTextTemplates[_]);
             var diceString = string.Join(" ", diceTexts);
-            ctx.Send(diceString);
+
+            var brushes = Board.Players.Count == 2 ? new[] { "#C21000", "#005AC2" } : new[] { "#C21200", "#C2A813", "#13C264", "#190AC2" };
+            var embed = new DiscordEmbedBuilder()
+                    .WithColor(new DiscordColor(brushes[Turn.PlayerIndex]))
+                    .AddField($"{rank.Initial} `{rank.Name}`", diceString, inline: true);
+            if (Turn.RemainReroll > 0)
+                embed.AddField("Reroll", rerollString, inline: true);
+            embed.AddField("Move", moveString, inline: true); ;
+            ctx.SendImage(image, $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn", embed);
         }
     }
 }

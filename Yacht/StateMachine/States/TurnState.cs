@@ -1,4 +1,5 @@
 ﻿using Disboard;
+using DSharpPlus.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -127,17 +128,19 @@ namespace Yacht
 
         void PrintTurn()
         {
-            ctx.SendImage(ctx.Render(() => Board.GetBoardGrid((CurrentPlayer, Turn.CurrentDices))));
+            var image = ctx.Render(() => Board.GetBoardGrid((CurrentPlayer, Turn.CurrentDices)));
 
-            var checkTexts = Enumerable.Range(0, 3).Reverse().Select(_ => _ < Turn.CurrentRemainReroll).Select(_ => _ ? ":arrows_counterclockwise:" : ":ballot_box_with_check:");
-            var checkString = string.Join(" ", checkTexts);
-            var turnIndicator = $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn, Reroll: " + checkString;
-            ctx.Send(turnIndicator);
+            var rerollTexts = Enumerable.Range(0, 3).Reverse().Select(_ => _ < Turn.CurrentRemainReroll).Select(_ => _ ? ":arrows_counterclockwise:" : ":ballot_box_with_check:");
+            var rerollString = string.Join(" ", rerollTexts);
 
             var diceTextTemplates = new List<string> { ":zero:", ":one:", ":two:", ":three:", ":four:", ":five:", ":six:" };
             var diceTexts = Turn.CurrentDices.Select(_ => diceTextTemplates[_]);
             var diceString = string.Join(" ", diceTexts);
-            ctx.Send(diceString);
+
+            var embed = new DiscordEmbedBuilder()
+                .AddField("Dices", diceString, inline: true)
+                .AddField("Reroll", rerollString, inline: true);
+            ctx.SendImage(image, $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn", embed);
         }
     }
 

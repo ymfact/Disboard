@@ -1,4 +1,5 @@
 ﻿using Disboard;
+using DSharpPlus.Entities;
 using System.Collections.Generic;
 using System.Linq;
 using static Disboard.Macro;
@@ -144,17 +145,19 @@ namespace Vechu
 
         void PrintTurn()
         {
-            ctx.SendImage(ctx.Render(() => Board.GetBoardGrid((CurrentPlayer, Turn.Dices))));
+            var image = ctx.Render(() => Board.GetBoardGrid((CurrentPlayer, Turn.Dices)));
 
             var rerollTexts = Enumerable.Range(0, 2).Reverse().Select(_ => _ < Turn.RemainReroll).Select(_ => _ ? ":arrows_counterclockwise:" : ":ballot_box_with_check:");
             var rerollString = string.Join(" ", rerollTexts);
-            var turnIndicator = $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn, Reroll: {rerollString}";
-            ctx.Send(turnIndicator);
 
             var diceTextTemplates = new List<string> { ":zero:", ":one:", ":two:", ":three:", ":four:", ":five:", ":six:" };
             var diceTexts = Turn.Dices.Select(_ => diceTextTemplates[_]);
             var diceString = string.Join(" ", diceTexts);
-            ctx.Send(diceString);
+
+            var embed = new DiscordEmbedBuilder()
+                .AddField("Dices", diceString, inline: true)
+                .AddField("Reroll", rerollString, inline: true);
+            ctx.SendImage(image, $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn", embed);
         }
     }
 }
