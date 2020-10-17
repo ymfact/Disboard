@@ -5,7 +5,7 @@
         [System.STAThread()]
         static void Main()
         {
-            var disboard = new Disboard.Disboard(_ => new Vechu(_));
+            var disboard = new Disboard.Disboard<VechuFactory>();
             disboard.Run(Token.token);
         }
     }

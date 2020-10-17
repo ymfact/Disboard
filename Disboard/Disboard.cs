@@ -20,18 +20,15 @@ namespace Disboard
     public delegate void SendImageType(Stream stream, string? message = null, DiscordEmbed? embed = null);
     public delegate void SendImagesType(IReadOnlyList<Stream> streams, string? message = null, DiscordEmbed? embed = null);
     public delegate Stream RenderType(Func<Control> controlConstructor);
-    public sealed class Disboard
+
+    public sealed class Disboard<GameFactoryType> where GameFactoryType : IGameFactory, new()
     {
         volatile bool IsInitialized = false;
 
-        Func<GameInitializeData, Game> GameConstructor { get; }
-
+        IGameFactory GameFactory { get; } = new GameFactoryType();
         Application Application { get; } = new Application();
         Dictionary<ChannelIdType, Game> Games { get; } = new Dictionary<ChannelIdType, Game>();
-        Dictionary<UserIdType, GameUsesDM> GamesByUsers { get; } = new Dictionary<UserIdType, GameUsesDM>();
-
-        public Disboard(Func<GameInitializeData, Game> gameConstructor)
-            => GameConstructor = gameConstructor;
+        Dictionary<UserIdType, IGameUsesDM> GamesByUsers { get; } = new Dictionary<UserIdType, IGameUsesDM>();
 
         public void Run(string token)
         {
@@ -62,15 +59,15 @@ namespace Disboard
             var members = channel.Guild.Members.Where(_ => userIds.Contains(_.Id));
             var dMChannels = await Task.WhenAll(members.Select(_ => _.CreateDmChannelAsync()));
             var random = new Random();
-            var players = members.Zip(dMChannels).Select(_ => new Player(_.First, _.Second)).OrderBy(_ => random.Next()).ToList();
             var messageQueue = new ConcurrentQueue<Task>();
+            var players = members.Zip(dMChannels).Select(_ => new Player(_.First, _.Second, messageQueue)).OrderBy(_ => random.Next()).ToList();
             var gameInitializeData = new GameInitializeData(channel, players, OnFinish, Application.Dispatcher, messageQueue);
-            Game game = GameConstructor(gameInitializeData);
+            Game game = GameFactory.New(gameInitializeData);
 
             OnFinish(channel.Id);
-            if (game is GameUsesDM)
+            if (game is IGameUsesDM)
             {
-                var gameUsesDM = game as GameUsesDM;
+                var gameUsesDM = game as IGameUsesDM;
                 foreach (var player in players)
                 {
                     if (GamesByUsers.ContainsKey(player.Id))
@@ -191,14 +188,14 @@ namespace Disboard
             if (channel.Type == ChannelType.Private)
             {
                 var game = GamesByUsers.GetValueOrDefault(authorId);
-                if (game is GameUsesDM)
+                if (game is IGameUsesDM)
                 {
                     var player = game.InitialPlayers.Where(_ => _.Id == authorId).FirstOrDefault();
                     if (player != null)
                     {
                         try
                         {
-                            await game.OnDM(player, content);
+                            game.OnDM(player, content);
                             foreach (var messageTask in game.MessageQueue)
                                 await messageTask;
                         }
@@ -258,13 +255,48 @@ namespace Disboard
                             }
                         }
                     }
+                    else if (split.Count == 2 && split[1].ToLower() == "help")
+                    {
+                        if (game == null)
+                        {
+                            await channel.SendMessageAsync("`BOT start @참가인원1 @참가인원2...로 게임을 시작합니다.`");
+                        }
+                        else
+                        {
+                            if (mentionedUsers.Count() == split.Count - 2)
+                            {
+                                var player = game.InitialPlayers.Where(_ => _.Id == authorId).FirstOrDefault();
+                                if (player == null)
+                                {
+                                    await channel.SendMessageAsync("`게임에 참여하려면 BOT restart @참가인원1 @참가인원2...로 게임을 다시 시작해야 합니다.`");
+                                }
+                                else
+                                {
+                                    try
+                                    {
+                                        GameFactory.OnHelp(game.Channel);
+                                        foreach (var messageTask in game.MessageQueue)
+                                            await messageTask;
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Log(e.ToString());
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                await channel.SendMessageAsync("`BOT restart @참가인원1 @참가인원2... 로 게임을 시작합니다.`");
+                            }
+                        }
+                    }
                     else if (split.Count > 1 && split[1].ToLower() == "restoredm")
                     {
                         if (game == null)
                         {
                             await channel.SendMessageAsync("`진행중인 게임이 없습니다. BOT start @참가인원1 @참가인원2...는 어떨까요?`");
                         }
-                        else if (false == game is GameUsesDM)
+                        else if (false == game is IGameUsesDM)
                         {
                             await channel.SendMessageAsync("`DM을 사용하지 않는 게임입니다.`");
                         }
@@ -277,7 +309,7 @@ namespace Disboard
                             }
                             else
                             {
-                                var gameUsesDM = game as GameUsesDM;
+                                var gameUsesDM = game as IGameUsesDM;
                                 var member = await guild.GetMemberAsync(authorId);
                                 var dMChannel = await member.CreateDmChannelAsync();
                                 if (GamesByUsers.GetValueOrDefault(authorId) == game)
@@ -295,7 +327,7 @@ namespace Disboard
                     }
                     else
                     {
-                        await channel.SendMessageAsync("`명령어: BOT start, BOT restart, BOT restoredm`");
+                        await channel.SendMessageAsync("`명령어: BOT start, BOT restart, BOT help, BOT restoredm`");
                     }
                 }
                 else

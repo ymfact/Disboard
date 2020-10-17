@@ -23,7 +23,7 @@ namespace Xanth
         TurnContext Turn { get; }
 
         TurnState(
-            GameContext ctx,
+            Game ctx,
             BoardContext board,
             TurnContext turn
             ) : base(ctx)
@@ -151,7 +151,7 @@ namespace Xanth
         TurnState StartTurn(int nextPlayerIndex)
             => StartTurn(ctx, Board, Turn.Next(nextPlayerIndex));
 
-        static TurnState StartTurn(GameContext ctx, BoardContext board, TurnContext turn)
+        static TurnState StartTurn(Game ctx, BoardContext board, TurnContext turn)
         {
             TurnState next = new TurnState(
                    ctx: ctx,

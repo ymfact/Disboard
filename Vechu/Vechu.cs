@@ -15,4 +15,10 @@ namespace Vechu
         public override void OnGroup(Player player, string message)
             => State = State.OnGroup(player, message);
     }
+
+    class VechuFactory : IGameFactory
+    {
+        public Game New(GameInitializeData initData) => new Vechu(initData);
+        public void OnHelp(Channel channel) => channel.Send("`Vechu`");
+    }
 }

@@ -15,4 +15,10 @@ namespace Yacht
         public override void OnGroup(Player player, string message)
             => State = State.OnGroup(player, message);
     }
+
+    class YachtFactory : IGameFactory
+    {
+        public Game New(GameInitializeData initData) => new Yacht(initData);
+        public void OnHelp(Channel channel) => channel.Send("`Yacht`");
+    }
 }

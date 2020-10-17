@@ -5,10 +5,10 @@ namespace Yacht
 {
     abstract class GameState
     {
-        public readonly GameContext ctx;
+        public readonly Game ctx;
 
-        protected GameState(GameContext context)
-            => ctx = context;
+        protected GameState(Game ctx)
+            => this.ctx = ctx;
 
         public virtual GameState OnStart() => this;
         public virtual GameState OnGroup(Player player, string message) => this;

@@ -18,4 +18,9 @@ namespace EchoVisual
             SendImage(image);
         }
     }
+    class EchoVisualFactory : IGameFactory
+    {
+        public Game New(GameInitializeData initData) => new EchoVisual(initData);
+        public void OnHelp(Channel channel) => channel.Send("`EchoVisual`");
+    }
 }

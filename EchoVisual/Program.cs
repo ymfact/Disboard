@@ -5,7 +5,7 @@
         [System.STAThread()]
         static void Main()
         {
-            var disboard = new Disboard.Disboard(_ => new EchoVisual(_));
+            var disboard = new Disboard.Disboard<EchoVisualFactory>();
             disboard.Run("TOKEN");
         }
     }

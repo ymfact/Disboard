@@ -19,7 +19,7 @@ namespace Yacht
             return new FinalState(prev.ctx);
         }
 
-        FinalState(GameContext ctx) : base(ctx) { }
+        FinalState(Game ctx) : base(ctx) { }
 
     }
 }

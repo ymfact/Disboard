@@ -15,4 +15,14 @@ namespace Xanth
         public override void OnGroup(Player player, string message)
             => State = State.OnGroup(player, message);
     }
+
+    class XanthFactory : IGameFactory
+    {
+        public Game New(GameInitializeData initData) => new Xanth(initData);
+
+        public void OnHelp(Channel channel)
+        {
+            throw new System.NotImplementedException();
+        }
+    }
 }

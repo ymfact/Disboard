@@ -5,7 +5,7 @@ namespace Xanth
 {
     class InitialState : GameState
     {
-        public static InitialState New(GameContext ctx, IReadOnlyList<Player> initialPlayers)
+        public static InitialState New(Game ctx, IReadOnlyList<Player> initialPlayers)
             => new InitialState(
                    ctx: ctx,
                    players: initialPlayers
@@ -13,7 +13,7 @@ namespace Xanth
 
         public IReadOnlyList<Player> Players { get; }
 
-        InitialState(GameContext ctx, IReadOnlyList<Player> players) : base(ctx)
+        InitialState(Game ctx, IReadOnlyList<Player> players) : base(ctx)
             => Players = players;
 
         public override GameState OnStart()
