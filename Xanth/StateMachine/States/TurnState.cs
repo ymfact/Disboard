@@ -176,7 +176,7 @@ namespace Xanth
             var diceTexts = Turn.Dices.Select(_ => diceTextTemplates[_]);
             var diceString = string.Join(" ", diceTexts);
 
-            var brushes = Board.Players.Count == 2 ? new[] { "#C21000", "#005AC2" } : new[] { "#C21200", "#C2A813", "#13C264", "#190AC2" };
+            var brushes = Board.Players.Count == 2 ? new[] { "#005AC2", "#C21000" } : new[] { "#C21200", "#C2A813", "#13C264", "#190AC2" };
             var embed = new DiscordEmbedBuilder()
                     .WithColor(new DiscordColor(brushes[Turn.PlayerIndex]))
                     .AddField($"{rank.Initial} `{rank.Name}`", diceString, inline: true);
