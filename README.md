@@ -1,6 +1,6 @@
 # Disboard
 
-### Online Text-Based Board Game Framework using Discord
+### Online Text-Based Board Game Platform using Discord
 
 #### A simple example: Echo
 ```csharp
