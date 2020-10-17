@@ -4,13 +4,12 @@ namespace Vechu
 {
     class Vechu : Game
     {
-        GameState State { get; set; }
+        IGameState State { get; set; } = NullState.New;
 
-        public Vechu(GameInitializeData initData) : base(initData)
-            => State = InitialState.New(this, InitialPlayers);
+        public Vechu(GameInitializeData initData) : base(initData) { }
 
         public override void Start()
-            => State = State.OnStart();
+            => State = TurnState.New(this, InitialPlayers);
 
         public override void OnGroup(Player player, string message)
             => State = State.OnGroup(player, message);

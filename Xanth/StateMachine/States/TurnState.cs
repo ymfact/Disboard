@@ -8,13 +8,13 @@ namespace Xanth
 {
     partial class TurnState : GameState
     {
-        static public TurnState From(InitialState prev)
+        static public TurnState New(Game ctx, IReadOnlyList<Player> players)
         {
-            new XanthFactory().OnHelp(prev.ctx.Channel);
+            new XanthFactory().OnHelp(ctx.Channel);
 
-            var board = BoardContext.New(prev.Players);
+            var board = BoardContext.New(players);
             var turn = TurnContext.New();
-            var next = StartTurn(ctx: prev.ctx, board: board, turn: turn);
+            var next = StartTurn(ctx: ctx, board: board, turn: turn);
 
             return next;
         }
@@ -34,7 +34,7 @@ namespace Xanth
 
         public Player CurrentPlayer => Board.Players.ToList()[Turn.PlayerIndex];
 
-        public override GameState OnGroup(Player player, string message)
+        public override IGameState OnGroup(Player player, string message)
         {
             if (player == CurrentPlayer)
             {
@@ -86,7 +86,7 @@ namespace Xanth
             }
         }
 
-        GameState Submit(string message)
+        IGameState Submit(string message)
         {
             var split = message.Split();
             if (split.Length == 1)
@@ -131,11 +131,23 @@ namespace Xanth
             }
         }
 
-        GameState ProceedAndStartTurn()
+        IGameState ProceedAndStartTurn()
         {
             if (Board.Board.Slots.All(_ => _.All(_ => _.Owner != null)))
             {
-                return FinalState.From(this);
+                var image = ctx.Render(() => Board.GetBoardGrid(null));
+
+                var scores = Board.Board.Slots.SelectMany(_ => _).GroupBy(_ => _.Owner).Select(_ => (_.Key, _.Count()));
+                var highestScore = scores.OrderByDescending(_ => _.Item2).First().Item2;
+                var winners = scores.Where(_ => _.Item2 == highestScore).Select(_ => _.Key!.Name);
+
+                var embed = new DiscordEmbedBuilder()
+                    .AddField(winners.Count() > 1 ? "Winners" : "Winner", string.Join(", ", winners), inline: true);
+                ctx.SendImage(image, "@here", embed);
+
+                ctx.OnFinish();
+
+                return NullState.New;
             }
             else
             {

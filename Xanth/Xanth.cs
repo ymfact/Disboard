@@ -4,13 +4,22 @@ namespace Xanth
 {
     class Xanth : Game
     {
-        GameState State { get; set; }
+        IGameState State { get; set; } = NullState.New;
 
-        public Xanth(GameInitializeData initData) : base(initData)
-            => State = InitialState.New(this, InitialPlayers);
+        public Xanth(GameInitializeData initData) : base(initData) { }
 
         public override void Start()
-            => State = State.OnStart();
+        {
+            if (InitialPlayers.Count == 2 || InitialPlayers.Count == 4)
+            {
+                State = TurnState.New(this, InitialPlayers);
+            }
+            else
+            {
+                Send("`Xanth는 2인, 4인으로만 플레이 가능합니다.`");
+                OnFinish();
+            }
+        }
 
         public override void OnGroup(Player player, string message)
             => State = State.OnGroup(player, message);

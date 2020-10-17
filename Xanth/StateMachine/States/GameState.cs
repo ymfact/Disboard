@@ -1,18 +1,16 @@
 ﻿using Disboard;
-using System;
 
 namespace Xanth
 {
-    abstract class GameState
+    abstract class GameState : IGameState
     {
         public readonly Game ctx;
 
         protected GameState(Game ctx)
             => this.ctx = ctx;
 
-        public virtual GameState OnStart() => this;
-        public virtual GameState OnGroup(Player player, string message) => this;
+        public abstract IGameState OnGroup(Player player, string message);
 
-        protected static Random Random { get; } = new Random();
+        IGameState IGameState.OnGroup(Player player, string message) => OnGroup(player, message);
     }
 }

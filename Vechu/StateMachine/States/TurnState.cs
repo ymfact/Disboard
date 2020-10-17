@@ -8,13 +8,13 @@ namespace Vechu
 {
     partial class TurnState : GameState
     {
-        static public TurnState From(InitialState prev)
+        public static TurnState New(Game ctx, IReadOnlyList<Player> players)
         {
-            new VechuFactory().OnHelp(prev.ctx.Channel);
+            new VechuFactory().OnHelp(ctx.Channel);
 
-            var board = BoardContext.New(prev.Players);
+            var board = BoardContext.New(players);
             var turn = TurnContext.New();
-            var next = StartTurn(ctx: prev.ctx, board: board, turn: turn);
+            var next = StartTurn(ctx: ctx, board: board, turn: turn);
 
             return next;
         }
@@ -34,7 +34,7 @@ namespace Vechu
 
         public Player CurrentPlayer => Board.Players.ToList()[Turn.PlayerIndex];
 
-        public override GameState OnGroup(Player player, string message)
+        public override IGameState OnGroup(Player player, string message)
         {
             if (player == CurrentPlayer)
             {
@@ -86,7 +86,7 @@ namespace Vechu
             }
         }
 
-        GameState Submit(string message)
+        IGameState Submit(string message)
         {
             var split = message.Split();
             if (split.Length != 2)
@@ -112,7 +112,7 @@ namespace Vechu
             }
         }
 
-        GameState ProceedAndStartTurn()
+        IGameState ProceedAndStartTurn()
         {
             int newPlayerIndex = Turn.PlayerIndex + 1;
             if (newPlayerIndex >= Board.Players.Count)
@@ -121,7 +121,17 @@ namespace Vechu
             }
             if (Board.ScoreDict[Board.Players[newPlayerIndex]] == 50)
             {
-                return FinalState.From(this);
+                var image = ctx.Render(() => Board.GetBoardGrid(null));
+
+                var winners = Board.ScoreDict.Where(_ => _.Value == 50).Select(_ => _.Key!.Name);
+
+                var embed = new DiscordEmbedBuilder()
+                    .AddField(winners.Count() > 1 ? "Winners" : "Winner", string.Join(", ", winners), inline: true);
+                ctx.SendImage(image, "@here", embed);
+
+                ctx.OnFinish();
+
+                return NullState.New;
             }
             else
             {

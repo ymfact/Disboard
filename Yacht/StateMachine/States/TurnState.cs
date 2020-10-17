@@ -9,17 +9,17 @@ namespace Yacht
 {
     partial class TurnState : GameState
     {
-        public static TurnState From(InitialState prev)
+        public static TurnState New(Game ctx, IReadOnlyList<Player> players)
         {
-            new YachtFactory().OnHelp(prev.ctx.Channel);
+            new YachtFactory().OnHelp(ctx.Channel);
 
-            var board = BoardContext.New(prev.Players);
+            var board = BoardContext.New(players);
             var turn = TurnContext.New();
-            var next = StartTurn(prev.ctx, board, turn);
+            var next = StartTurn(ctx, board, turn);
             return next;
         }
 
-        public override GameState OnGroup(Player player, string message)
+        public override IGameState OnGroup(Player player, string message)
         {
             if (player == CurrentPlayer)
             {
@@ -67,7 +67,7 @@ namespace Yacht
             }
         }
 
-        GameState Submit(string message)
+        IGameState Submit(string message)
         {
             var split = message.Split();
             var scoreBoard = Board.ScoreBoardDict[CurrentPlayer];
@@ -94,11 +94,22 @@ namespace Yacht
             }
         }
 
-        GameState ProceedAndStartTurn()
+        IGameState ProceedAndStartTurn()
         {
             if (Board.ScoreBoardDict.Values.All(_ => _.Places.Values.All(_ => _.IsOpen == false)))
             {
-                return FinalState.From(this);
+                var image = ctx.Render(() => Board.GetBoardGrid(null));
+
+                var highestScore = Board.ScoreBoardDict.Values.Select(_ => _.TotalScore).OrderByDescending(_ => _).First();
+                var winners = Board.Players.Where(_ => Board.ScoreBoardDict[_].TotalScore == highestScore).Select(_ => _.Name);
+
+                var embed = new DiscordEmbedBuilder()
+                    .AddField(winners.Count() > 1 ? "Winners" : "Winner", string.Join(", ", winners), inline: true);
+                ctx.SendImage(image, "@here", embed);
+
+                ctx.OnFinish();
+
+                return NullState.New;
             }
             else
             {
