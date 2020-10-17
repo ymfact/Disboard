@@ -7,4 +7,8 @@
 	<UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>D:\works\Disboard\Disgrid\Disgrid.xml</DocumentationFile>
+  </PropertyGroup>
+
 </Project>

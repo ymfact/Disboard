@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Disboard</name>
+    </assembly>
+    <members>
+        <member name="P:Disboard.Game.Render">
+            <summary>
+            WPF 컨트롤을 사용하여 이미지를 그릴 수 있습니다. EchoVisual.cs를 예제로써 참고하세요.
+            사용하려면 Main 함수 윗줄에 [System.STAThread()]를 추가해야 합니다.
+            </summary>
+        </member>
+        <member name="T:Disboard.GameFactory`1">
+            <summary>
+            도움말을 제공하지 않는 IGameFactory의 기본적인 구현입니다.
+            </summary>
+            <typeparam name="GameType">파라미터가 GameInitializeData 1개인 public 생성자가 있어야 합니다.</typeparam>
+        </member>
+        <member name="M:Disboard.Macro.R(System.String)">
+            <summary>
+            Red
+            </summary>
+        </member>
+        <member name="M:Disboard.Macro.O(System.String)">
+            <summary>
+            Orange
+            </summary>
+        </member>
+        <member name="M:Disboard.Macro.Y(System.String)">
+            <summary>
+            Yellow
+            </summary>
+        </member>
+        <member name="M:Disboard.Macro.G(System.String)">
+            <summary>
+            Green
+            </summary>
+        </member>
+        <member name="M:Disboard.Macro.T(System.String)">
+            <summary>
+            Teal
+            </summary>
+        </member>
+        <member name="M:Disboard.Macro.B(System.String)">
+            <summary>
+            Blue
+            </summary>
+        </member>
+        <member name="M:Disboard.Macro.W(System.String)">
+            <summary>
+            White
+            </summary>
+        </member>
+        <member name="P:Disboard.Player.DM">
+            <summary>
+            플레이어의 DM 입력을 받으려면 IGameUsesDM을 사용해야 합니다. README를 참고하세요.
+            </summary>
+        </member>
+        <member name="P:Disboard.Player.DMURL">
+            <summary>
+            플레이어의 DM 입력을 받으려면 IGameUsesDM을 사용해야 합니다. README를 참고하세요.
+            </summary>
+        </member>
+        <member name="P:Disboard.Player.DMImage">
+            <summary>
+            플레이어의 DM 입력을 받으려면 IGameUsesDM을 사용해야 합니다. README를 참고하세요.
+            </summary>
+        </member>
+        <member name="P:Disboard.Player.DMImages">
+            <summary>
+            플레이어의 DM 입력을 받으려면 IGameUsesDM을 사용해야 합니다. README를 참고하세요.
+            </summary>
+        </member>
+    </members>
+</doc>
