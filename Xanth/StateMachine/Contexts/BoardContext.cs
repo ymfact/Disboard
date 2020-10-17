@@ -32,8 +32,8 @@ namespace Xanth
             }
             else
             {
-                BoardSize = 6;
-                markers = new[] { new Marker(0, 5, BoardSize), new Marker(0, 0, BoardSize), new Marker(5, 0, BoardSize), new Marker(5, 5, BoardSize) };
+                BoardSize = 5;
+                markers = new[] { new Marker(0, 4, BoardSize), new Marker(0, 0, BoardSize), new Marker(4, 0, BoardSize), new Marker(4, 4, BoardSize) };
             }
 
             MarkerDict = players.Enumerate().ToDictionary(_ => _.elem, _ => markers[_.index]);
