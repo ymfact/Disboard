@@ -64,7 +64,7 @@ namespace Vechu
             return new TurnContext(
                 playerIndex: PlayerIndex,
                 dices: newDices.ToArray(),
-                remainReroll: newDices[0] == newDices[1] ? RemainReroll : RemainReroll - 1
+                remainReroll: newDices[0] == newDices[1] ? dicesToReroll.Count : dicesToReroll.Count - 1
                 );
         }
     }
