@@ -23,6 +23,7 @@ namespace Disboard
         public SendType Send => Channel.Send;
         public SendImageType SendImage => Channel.SendImage;
         public SendImagesType SendImages => Channel.SendImages;
+        public string GroupURL => Channel.URL;
         public Action OnFinish { get; }
         public IReadOnlyList<Player> InitialPlayers { get; }
         /// <summary>

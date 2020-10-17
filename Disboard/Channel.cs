@@ -16,7 +16,7 @@ namespace Disboard
         {
             Send = (message, embed) => messageQueue.Enqueue(channel.SendMessageAsync(message, embed: embed));
             SendImage = (stream, message, embed) => messageQueue.Enqueue(channel.SendFileAsync(stream, file_name: "image.png", content: message, embed: embed));
-            SendImages = (streams, message, embed) => messageQueue.Enqueue(channel.SendMultipleFilesAsync(streams.Enumerate().ToDictionary(_ => $"{_.index}", _ => _.elem), content: message, embed: embed));
+            SendImages = (streams, message, embed) => messageQueue.Enqueue(channel.SendMultipleFilesAsync(streams.Enumerate().ToDictionary(_ => $"{_.index}.png", _ => _.elem), content: message, embed: embed));
 
             string guildId = channel.GuildId == default ? "@me" : $"{channel.GuildId}";
             URL = $"https://discord.com/channels/{guildId}/{channel.Id}";
