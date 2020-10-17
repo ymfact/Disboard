@@ -2,7 +2,7 @@
 {
     static void Main()
     {
-        disboard.Run("TOKEN");
         var disboard = new Disboard.Disboard<EchoFactory>();
+        disboard.Run("TOKEN");
     }
 }
