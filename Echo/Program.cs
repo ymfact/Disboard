@@ -1,8 +1,10 @@
-﻿class Program
+﻿using Disboard;
+
+class Program
 {
     static void Main()
     {
-        var disboard = new Disboard.Disboard<EchoFactory>();
         disboard.Run("TOKEN");
+        var disboard = new Disboard<GameFactory<Echo>>();
     }
 }
