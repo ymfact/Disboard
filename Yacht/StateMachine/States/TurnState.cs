@@ -10,11 +10,11 @@ namespace Yacht
     {
         public static TurnState From(InitialState prev)
         {
+            new YachtFactory().OnHelp(prev.ctx.Channel);
+
             var board = BoardContext.New(prev.Players);
             var turn = TurnContext.New();
             var next = StartTurn(prev.ctx, board, turn);
-
-            next.ctx.Send("`명령어: R 23456, S 4k`");
             return next;
         }
 
@@ -39,7 +39,7 @@ namespace Yacht
         {
             if (Turn.CurrentRemainReroll <= 0)
             {
-                ctx.Send(W("남은 리롤 기회가 없습니다. 점수를 적을 항목을 선택하세요. 예시: S 3k"));
+                ctx.Send(W("남은 리롤 기회가 없습니다. 점수를 기록할 항목을 선택하세요. 예시: S 3k"));
                 return this;
             }
             var split = message.Split();

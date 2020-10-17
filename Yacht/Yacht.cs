@@ -19,6 +19,12 @@ namespace Yacht
     class YachtFactory : IGameFactory
     {
         public Game New(GameInitializeData initData) => new Yacht(initData);
-        public void OnHelp(Channel channel) => channel.Send("`Yacht`");
+        public void OnHelp(Channel channel)
+        {
+            channel.Send(
+                "`리롤하려면 리롤할 주사위를 입력하세요. 예시: R 446`\n" +
+                "`점수를 기록하려면 이니셜을 입력하세요. 예시: S 3k`"
+                );
+        }
     }
 }

@@ -9,13 +9,12 @@ namespace Xanth
     {
         static public TurnState From(InitialState prev)
         {
-            prev.ctx.Send("O `No Pair` < P `One Pair` < 3 `Three Straight` < T `Triple` < 2P `Two Pair` < 4 `Four Straight` = X `Xanth`");
+            new XanthFactory().OnHelp(prev.ctx.Channel);
 
             var board = BoardContext.New(prev.Players);
             var turn = TurnContext.New();
             var next = StartTurn(ctx: prev.ctx, board: board, turn: turn);
 
-            next.ctx.Send("`명령어: R 234, S wasd  턴을 넘기려면 S !, 이동 후 보드에 쓰지 않으려면 문자 뒤에 !를 입력합니다. 예시: S w!asd`");
             return next;
         }
 

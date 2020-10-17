@@ -19,6 +19,9 @@ namespace Vechu
     class VechuFactory : IGameFactory
     {
         public Game New(GameInitializeData initData) => new Vechu(initData);
-        public void OnHelp(Channel channel) => channel.Send("`Vechu`");
+        public void OnHelp(Channel channel) => channel.Send(
+            "`리롤하려면 리롤할 주사위를 입력하세요. 예시: R4, R 66`\n" +
+            "`점수를 기록하려면 점수를 더할지 뺄지를 입력하세요. 예시: S +, S -`"
+            );
     }
 }

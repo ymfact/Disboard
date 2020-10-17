@@ -9,11 +9,12 @@ namespace Vechu
     {
         static public TurnState From(InitialState prev)
         {
+            new VechuFactory().OnHelp(prev.ctx.Channel);
+
             var board = BoardContext.New(prev.Players);
             var turn = TurnContext.New();
             var next = StartTurn(ctx: prev.ctx, board: board, turn: turn);
 
-            next.ctx.Send("`명령어: R 1, R 66, S +, S -`");
             return next;
         }
 

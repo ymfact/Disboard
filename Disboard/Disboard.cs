@@ -263,31 +263,22 @@ namespace Disboard
                         }
                         else
                         {
-                            if (mentionedUsers.Count() == split.Count - 2)
-                            {
-                                var player = game.InitialPlayers.Where(_ => _.Id == authorId).FirstOrDefault();
-                                if (player == null)
-                                {
-                                    await channel.SendMessageAsync("`게임에 참여하려면 BOT restart @참가인원1 @참가인원2...로 게임을 다시 시작해야 합니다.`");
-                                }
-                                else
-                                {
-                                    try
-                                    {
-                                        GameFactory.OnHelp(game.Channel);
-                                        foreach (var messageTask in game.MessageQueue)
-                                            await messageTask;
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        Log(e.ToString());
-                                    }
-                                }
-                            }
-                            else
+                            var player = game.InitialPlayers.Where(_ => _.Id == authorId).FirstOrDefault();
+                            if (player == null)
                             {
                                 await channel.SendMessageAsync("`BOT restart @참가인원1 @참가인원2... 로 게임을 시작합니다.`");
                             }
+                        }
+                        try
+                        {
+                            var messageQueue = new ConcurrentQueue<Task>();
+                            GameFactory.OnHelp(new Channel(channel, messageQueue));
+                            foreach (var messageTask in messageQueue)
+                                await messageTask;
+                        }
+                        catch (Exception e)
+                        {
+                            Log(e.ToString());
                         }
                     }
                     else if (split.Count > 1 && split[1].ToLower() == "restoredm")
