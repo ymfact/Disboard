@@ -10,17 +10,17 @@ namespace Xanth
 {
     class BoardContext
     {
-        public IReadOnlyDictionary<Disboard.Player, Player> PlayerDict { get; }
+        public IReadOnlyDictionary<Disboard.DisboardPlayer, Player> PlayerDict { get; }
         public IReadOnlyList<Player> Players { get; }
         public IReadOnlyList<int> BannedOnRows { get; }
         public IReadOnlyList<int> BannedOnColumns { get; }
         public Board Board { get; }
         public int BoardSize { get; }
 
-        public static BoardContext New(IReadOnlyList<Disboard.Player> players)
+        public static BoardContext New(IReadOnlyList<Disboard.DisboardPlayer> players)
             => new BoardContext(players);
 
-        BoardContext(IReadOnlyList<Disboard.Player> players)
+        BoardContext(IReadOnlyList<Disboard.DisboardPlayer> players)
         {
             IList<Marker> markers;
             if (players.Count == 2)
@@ -224,6 +224,6 @@ namespace Xanth
             return reachables.Count == 0;
         }
         public void Drop(int playerIndex)
-            =>Players[playerIndex].IsDropped = true;
+            => Players[playerIndex].IsDropped = true;
     }
 }

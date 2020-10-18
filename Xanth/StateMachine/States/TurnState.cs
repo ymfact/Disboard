@@ -8,7 +8,7 @@ namespace Xanth
 {
     class TurnState : GameState
     {
-        static public TurnState New(Game ctx, IReadOnlyList<Disboard.Player> players)
+        static public TurnState New(DisboardGame ctx, IReadOnlyList<Disboard.DisboardPlayer> players)
         {
             new XanthFactory().OnHelp(ctx.Channel);
 
@@ -23,7 +23,7 @@ namespace Xanth
         TurnContext Turn { get; }
 
         TurnState(
-            Game ctx,
+            DisboardGame ctx,
             BoardContext board,
             TurnContext turn
             ) : base(ctx)
@@ -34,7 +34,7 @@ namespace Xanth
 
         public Player CurrentPlayer => Board.Players[Turn.PlayerIndex];
 
-        public override IGameState OnGroup(Disboard.Player player, string message)
+        public override IGameState OnGroup(Disboard.DisboardPlayer player, string message)
         {
             if (player == CurrentPlayer.Disboard)
             {
@@ -195,7 +195,7 @@ namespace Xanth
             return NullState.New;
         }
 
-        static TurnState StartTurn(Game ctx, BoardContext board, TurnContext turn)
+        static TurnState StartTurn(DisboardGame ctx, BoardContext board, TurnContext turn)
         {
             TurnState next = new TurnState(
                    ctx: ctx,

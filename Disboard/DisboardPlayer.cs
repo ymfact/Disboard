@@ -3,9 +3,9 @@
 namespace Disboard
 {
     using UserIdType = UInt64;
-    public abstract class Player
+    public abstract class DisboardPlayer
     {
-        internal Player(UserIdType id, string name, string mention, Channel channel)
+        internal DisboardPlayer(UserIdType id, string name, string mention, DisboardChannel channel)
         {
             Id = id;
             Name = name;
@@ -15,7 +15,7 @@ namespace Disboard
         internal UserIdType Id { get; }
         public string Name { get; }
         public string Mention { get; }
-        public Channel Channel { get; }
+        public DisboardChannel Channel { get; }
         /// <summary>
         /// 플레이어의 DM 입력을 받으려면 IGameUsesDM을 사용해야 합니다. README를 참고하세요.
         /// </summary>

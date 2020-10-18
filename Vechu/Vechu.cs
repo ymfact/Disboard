@@ -2,23 +2,23 @@
 
 namespace Vechu
 {
-    class Vechu : Game
+    class Vechu : DisboardGame
     {
         IGameState State { get; set; } = NullState.New;
 
-        public Vechu(GameInitializeData initData) : base(initData) { }
+        public Vechu(DisboardGameInitData initData) : base(initData) { }
 
         public override void Start()
             => State = TurnState.New(this, InitialPlayers);
 
-        public override void OnGroup(Player player, string message)
+        public override void OnGroup(DisboardPlayer player, string message)
             => State = State.OnGroup(player, message);
     }
 
-    class VechuFactory : IGameFactory
+    class VechuFactory : IDisboardGameFactory
     {
-        public Game New(GameInitializeData initData) => new Vechu(initData);
-        public void OnHelp(Channel channel) => channel.Send(
+        public DisboardGame New(DisboardGameInitData initData) => new Vechu(initData);
+        public void OnHelp(DisboardChannel channel) => channel.Send(
             "`리롤하려면 리롤할 주사위를 입력하세요. 예시: R4, R 66`\n" +
             "`점수를 기록하려면 점수를 더할지 뺄지를 입력하세요. 예시: S +, S -`"
             );

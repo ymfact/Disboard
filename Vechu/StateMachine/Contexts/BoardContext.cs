@@ -8,21 +8,21 @@ namespace Vechu
 {
     class BoardContext
     {
-        public IReadOnlyList<Player> Players { get; }
-        public Dictionary<Player, int> ScoreDict { get; }
+        public IReadOnlyList<DisboardPlayer> Players { get; }
+        public Dictionary<DisboardPlayer, int> ScoreDict { get; }
 
-        public static BoardContext New(IReadOnlyList<Player> players)
+        public static BoardContext New(IReadOnlyList<DisboardPlayer> players)
             => new BoardContext(players);
 
-        BoardContext(IReadOnlyList<Player> players)
+        BoardContext(IReadOnlyList<DisboardPlayer> players)
         {
             Players = players;
             ScoreDict = players.Enumerate().ToDictionary(_ => _.elem, _ => 0);
         }
-        public void Add(Player currentPlayer, int deltaScore)
+        public void Add(DisboardPlayer currentPlayer, int deltaScore)
             => ScoreDict[currentPlayer] += deltaScore;
 
-        public Disgrid.Disgrid GetBoardGrid((Player player, int[] dices)? CurrentState)
+        public Disgrid.Disgrid GetBoardGrid((DisboardPlayer player, int[] dices)? CurrentState)
         {
             int rowCount = 2;
             int columnCount = Players.Count;

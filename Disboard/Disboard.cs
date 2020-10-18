@@ -22,14 +22,14 @@ namespace Disboard
     public delegate void SendImagesType(IReadOnlyList<Stream> streams, string? message = null, DiscordEmbed? embed = null);
     public delegate Stream RenderType(Func<Control> controlConstructor);
 
-    public sealed class Disboard<GameFactoryType> where GameFactoryType : IGameFactory, new()
+    public sealed class Disboard<GameFactoryType> where GameFactoryType : IDisboardGameFactory, new()
     {
         bool IsInitialized = false;
 
-        IGameFactory GameFactory { get; } = new GameFactoryType();
+        IDisboardGameFactory GameFactory { get; } = new GameFactoryType();
         Application Application { get; } = new Application();
-        Dictionary<ChannelIdType, Game> Games { get; } = new Dictionary<ChannelIdType, Game>();
-        Dictionary<UserIdType, IGameUsesDM> GamesByUsers { get; } = new Dictionary<UserIdType, IGameUsesDM>();
+        Dictionary<ChannelIdType, DisboardGame> Games { get; } = new Dictionary<ChannelIdType, DisboardGame>();
+        Dictionary<UserIdType, IDisboardGameUsesDM> GamesByUsers { get; } = new Dictionary<UserIdType, IDisboardGameUsesDM>();
 
         public void Run(string token)
         {
@@ -52,8 +52,8 @@ namespace Disboard
         async Task NewDebugGame(DiscordChannel discordChannel, int mockPlayerCount)
         {
             var messageQueue = new ConcurrentQueue<Task>();
-            var channel = new Channel(discordChannel, new ConcurrentQueue<Task>());
-            var mockPlayers = Enumerable.Range(0, mockPlayerCount).Select(_ => new MockPlayer(_, discordChannel.Guild.Owner, channel) as Player).ToList();
+            var channel = new DisboardChannel(discordChannel, new ConcurrentQueue<Task>());
+            var mockPlayers = Enumerable.Range(0, mockPlayerCount).Select(_ => new MockPlayer(_, discordChannel.Guild.Owner, channel) as DisboardPlayer).ToList();
             await NewGame_(discordChannel, mockPlayers, messageQueue, isDebug: true);
         }
         async Task NewGame(DiscordChannel channel, IEnumerable<DiscordUser> users)
@@ -68,18 +68,18 @@ namespace Disboard
             var members = channel.Guild.Members.Where(_ => userIds.Contains(_.Id));
             var dMChannels = await Task.WhenAll(members.Select(_ => _.CreateDmChannelAsync()));
             var messageQueue = new ConcurrentQueue<Task>();
-            var players = members.Zip(dMChannels).Select(_ => new RealPlayer(_.First, _.Second, messageQueue) as Player).OrderBy(_ => random.Next()).ToList();
+            var players = members.Zip(dMChannels).Select(_ => new RealPlayer(_.First, _.Second, messageQueue) as DisboardPlayer).OrderBy(_ => random.Next()).ToList();
             await NewGame_(channel, players, messageQueue);
         }
-        async Task NewGame_(DiscordChannel channel, List<Player> players, ConcurrentQueue<Task> messageQueue, bool isDebug = false)
+        async Task NewGame_(DiscordChannel channel, List<DisboardPlayer> players, ConcurrentQueue<Task> messageQueue, bool isDebug = false)
         {
-            var gameInitializeData = new GameInitializeData(isDebug, channel, players, OnFinish, Application.Dispatcher, messageQueue);
-            Game game = GameFactory.New(gameInitializeData);
+            var gameInitializeData = new DisboardGameInitData(isDebug, channel, players, OnFinish, Application.Dispatcher, messageQueue);
+            DisboardGame game = GameFactory.New(gameInitializeData);
 
             OnFinish(channel.Id);
-            if (game is IGameUsesDM)
+            if (game is IDisboardGameUsesDM)
             {
-                var gameUsesDM = game as IGameUsesDM;
+                var gameUsesDM = game as IDisboardGameUsesDM;
                 foreach (var player in players)
                 {
                     if (GamesByUsers.TryGetValue(player.Id, out var existingGame) && existingGame != game)
@@ -198,7 +198,7 @@ namespace Disboard
             if (channel.Type == ChannelType.Private)
             {
                 var game = GamesByUsers.GetValueOrDefault(authorId);
-                if (game is IGameUsesDM)
+                if (game is IDisboardGameUsesDM)
                 {
                     var player = game.InitialPlayers.Where(_ => _.Id == authorId).FirstOrDefault();
                     if (player != null)
@@ -297,7 +297,7 @@ namespace Disboard
                         try
                         {
                             var messageQueue = new ConcurrentQueue<Task>();
-                            GameFactory.OnHelp(new Channel(channel, messageQueue));
+                            GameFactory.OnHelp(new DisboardChannel(channel, messageQueue));
                             foreach (var messageTask in messageQueue)
                                 await messageTask;
                         }
@@ -312,7 +312,7 @@ namespace Disboard
                         {
                             await channel.SendMessageAsync("`진행중인 게임이 없습니다. BOT start @참가인원1 @참가인원2...는 어떨까요?`");
                         }
-                        else if (false == game is IGameUsesDM)
+                        else if (false == game is IDisboardGameUsesDM)
                         {
                             await channel.SendMessageAsync("`DM을 사용하지 않는 게임입니다.`");
                         }
@@ -325,7 +325,7 @@ namespace Disboard
                             }
                             else
                             {
-                                var gameUsesDM = game as IGameUsesDM;
+                                var gameUsesDM = game as IDisboardGameUsesDM;
                                 var member = await guild.GetMemberAsync(authorId);
                                 var dMChannel = await member.CreateDmChannelAsync();
                                 if (GamesByUsers.GetValueOrDefault(authorId) == game)
@@ -355,7 +355,7 @@ namespace Disboard
                         {
                             if (game.IsDebug)
                             {
-                                if(split.Count > 0 && int.TryParse(split[0], out int playerIndex) && 0 <= playerIndex && playerIndex < game.InitialPlayers.Count)
+                                if (split.Count > 0 && int.TryParse(split[0], out int playerIndex) && 0 <= playerIndex && playerIndex < game.InitialPlayers.Count)
                                 {
                                     player = game.InitialPlayers[playerIndex];
                                     content = string.Join(' ', split.Skip(1));

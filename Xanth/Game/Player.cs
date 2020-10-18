@@ -5,13 +5,13 @@ namespace Xanth
 {
     class Player
     {
-        public Disboard.Player Disboard { get; }
+        public Disboard.DisboardPlayer Disboard { get; }
         public Marker Marker { get; set; }
         public bool NotMovedYet { get; set; } = true;
         public bool IsDropped { get; set; } = false;
         public string Color { get; set; }
         public string DarkColor { get; set; }
-        public Player(IReadOnlyList<Disboard.Player> players, Disboard.Player player, Marker marker)
+        public Player(IReadOnlyList<Disboard.DisboardPlayer> players, Disboard.DisboardPlayer player, Marker marker)
         {
             Marker = marker;
             Disboard = player;

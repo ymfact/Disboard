@@ -8,26 +8,26 @@ namespace Yacht
 {
     class BoardContext
     {
-        public IReadOnlyList<Player> Players { get; }
-        public IReadOnlyDictionary<Player, IScoreBoard> ScoreBoardDict { get; }
+        public IReadOnlyList<DisboardPlayer> Players { get; }
+        public IReadOnlyDictionary<DisboardPlayer, IScoreBoard> ScoreBoardDict { get; }
         IEnumerable<IScoreBoard> ScoreBoards => Players.Select(_ => ScoreBoardDict[_]);
 
         BoardContext(
-            IReadOnlyList<Player> players,
-            IReadOnlyDictionary<Player, IScoreBoard> scoreBoards
+            IReadOnlyList<DisboardPlayer> players,
+            IReadOnlyDictionary<DisboardPlayer, IScoreBoard> scoreBoards
             )
         {
             Players = players;
             ScoreBoardDict = scoreBoards;
         }
 
-        public static BoardContext New(IReadOnlyList<Player> players)
+        public static BoardContext New(IReadOnlyList<DisboardPlayer> players)
             => new BoardContext(
                 players: players,
                 scoreBoards: players.ToDictionary(_ => _, _ => new ScoreBoard() as IScoreBoard)
                 );
 
-        public Disgrid.Disgrid GetBoardGrid((Player currentPlayer, int[] currentDices)? currentState)
+        public Disgrid.Disgrid GetBoardGrid((DisboardPlayer currentPlayer, int[] currentDices)? currentState)
         {
             var scorePlaces = ScoreBoards.First().Places.Values.ToList();
 

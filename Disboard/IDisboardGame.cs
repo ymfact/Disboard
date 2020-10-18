@@ -4,14 +4,14 @@ using System.Threading.Tasks;
 
 namespace Disboard
 {
-    public interface IGame
+    public interface IDisboardGame
     {
         internal bool IsDebug { get; }
         internal ConcurrentQueue<Task> MessageQueue { get; }
 
-        IReadOnlyList<Player> InitialPlayers { get; }
+        IReadOnlyList<DisboardPlayer> InitialPlayers { get; }
 
         void Start();
-        void OnGroup(Player author, string message);
+        void OnGroup(DisboardPlayer author, string message);
     }
 }

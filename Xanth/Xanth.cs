@@ -2,11 +2,11 @@
 
 namespace Xanth
 {
-    class Xanth : Game
+    class Xanth : DisboardGame
     {
         IGameState State { get; set; } = NullState.New;
 
-        public Xanth(GameInitializeData initData) : base(initData) { }
+        public Xanth(DisboardGameInitData initData) : base(initData) { }
 
         public override void Start()
         {
@@ -21,15 +21,15 @@ namespace Xanth
             }
         }
 
-        public override void OnGroup(Disboard.Player player, string message)
+        public override void OnGroup(Disboard.DisboardPlayer player, string message)
             => State = State.OnGroup(player, message);
     }
 
-    class XanthFactory : IGameFactory
+    class XanthFactory : IDisboardGameFactory
     {
-        public Game New(GameInitializeData initData) => new Xanth(initData);
+        public DisboardGame New(DisboardGameInitData initData) => new Xanth(initData);
 
-        public void OnHelp(Channel channel)
+        public void OnHelp(DisboardChannel channel)
         {
             channel.Send(
                 "`리롤하려면 리롤할 주사위를 입력하세요. 예시: R 446`\n" +

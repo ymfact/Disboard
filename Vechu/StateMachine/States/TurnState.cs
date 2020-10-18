@@ -8,7 +8,7 @@ namespace Vechu
 {
     partial class TurnState : GameState
     {
-        public static TurnState New(Game ctx, IReadOnlyList<Player> players)
+        public static TurnState New(DisboardGame ctx, IReadOnlyList<DisboardPlayer> players)
         {
             new VechuFactory().OnHelp(ctx.Channel);
 
@@ -23,7 +23,7 @@ namespace Vechu
         TurnContext Turn { get; }
 
         TurnState(
-            Game ctx,
+            DisboardGame ctx,
             BoardContext board,
             TurnContext turn
             ) : base(ctx)
@@ -32,9 +32,9 @@ namespace Vechu
             Turn = turn;
         }
 
-        public Player CurrentPlayer => Board.Players.ToList()[Turn.PlayerIndex];
+        public DisboardPlayer CurrentPlayer => Board.Players.ToList()[Turn.PlayerIndex];
 
-        public override IGameState OnGroup(Player player, string message)
+        public override IGameState OnGroup(DisboardPlayer player, string message)
         {
             if (player == CurrentPlayer)
             {
@@ -142,7 +142,7 @@ namespace Vechu
         TurnState StartTurn(int nextPlayerIndex)
             => StartTurn(ctx, Board, Turn.Next(nextPlayerIndex));
 
-        static TurnState StartTurn(Game ctx, BoardContext board, TurnContext turn)
+        static TurnState StartTurn(DisboardGame ctx, BoardContext board, TurnContext turn)
         {
             TurnState next = new TurnState(
                    ctx: ctx,

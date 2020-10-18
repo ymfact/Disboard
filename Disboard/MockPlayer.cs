@@ -2,9 +2,9 @@
 
 namespace Disboard
 {
-    class MockPlayer : Player
+    class MockPlayer : DisboardPlayer
     {
-        internal MockPlayer(int index, DiscordMember member, Channel channel)
+        internal MockPlayer(int index, DiscordMember member, DisboardChannel channel)
             : base(member.Id, $"{index}", member.Mention, channel)
         {
         }

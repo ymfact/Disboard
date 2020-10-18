@@ -5,30 +5,30 @@ using System.Threading.Tasks;
 
 namespace Disboard
 {
-    public abstract class Game : IGame
+    public abstract class DisboardGame : IDisboardGame
     {
-        public Game(GameInitializeData initData)
+        public DisboardGame(DisboardGameInitData initData)
         {
             IsDebug = initData.IsDebug;
-            Channel = new Channel(initData.Channel, initData.MessageQueue);
+            Channel = new DisboardChannel(initData.Channel, initData.MessageQueue);
             InitialPlayers = initData.Players;
             OnFinish = () => initData.OnFinish(initData.Channel.Id);
             MessageQueue = initData.MessageQueue;
             Render = controlConstructor => initData.Dispatcher.Invoke(() => controlConstructor().Render());
         }
 
-        bool IGame.IsDebug => IsDebug;
+        bool IDisboardGame.IsDebug => IsDebug;
         internal bool IsDebug { get; }
-        ConcurrentQueue<Task> IGame.MessageQueue => MessageQueue;
+        ConcurrentQueue<Task> IDisboardGame.MessageQueue => MessageQueue;
         internal ConcurrentQueue<Task> MessageQueue { get; }
 
-        public Channel Channel { get; }
+        public DisboardChannel Channel { get; }
         public SendType Send => Channel.Send;
         public SendImageType SendImage => Channel.SendImage;
         public SendImagesType SendImages => Channel.SendImages;
         public string GroupURL => Channel.URL;
         public Action OnFinish { get; }
-        public IReadOnlyList<Player> InitialPlayers { get; }
+        public IReadOnlyList<DisboardPlayer> InitialPlayers { get; }
         /// <summary>
         /// WPF 컨트롤을 사용하여 이미지를 그릴 수 있습니다. EchoVisual.cs를 예제로써 참고하세요.
         /// 사용하려면 Main 함수 윗줄에 [System.STAThread()]를 추가해야 합니다.
@@ -36,6 +36,6 @@ namespace Disboard
         public RenderType Render { get; }
 
         public abstract void Start();
-        public abstract void OnGroup(Player author, string message);
+        public abstract void OnGroup(DisboardPlayer author, string message);
     }
 }

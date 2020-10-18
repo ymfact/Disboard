@@ -4,6 +4,6 @@ namespace Yacht
 {
     interface IGameState
     {
-        IGameState OnGroup(Player player, string message);
+        IGameState OnGroup(DisboardPlayer player, string message);
     }
 }

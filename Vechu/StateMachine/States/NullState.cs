@@ -6,6 +6,6 @@ namespace Vechu
     {
         public static NullState New => new NullState();
         NullState() { }
-        public IGameState OnGroup(Player player, string message) => this;
+        public IGameState OnGroup(DisboardPlayer player, string message) => this;
     }
 }

@@ -5,11 +5,10 @@ using System.Threading.Tasks;
 
 namespace Disboard
 {
-    using UserIdType = UInt64;
-    public sealed class RealPlayer : Player
+    public sealed class RealPlayer : DisboardPlayer
     {
         internal RealPlayer(DiscordMember member, DiscordDmChannel dMChannel, ConcurrentQueue<Task> messageQueue)
-            : base(member.Id, member.Username, member.Mention, new Channel(dMChannel, messageQueue))
+            : base(member.Id, member.Username, member.Mention, new DisboardChannel(dMChannel, messageQueue))
         {
         }
     }

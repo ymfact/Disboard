@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 
 namespace Disboard
 {
-    public class Channel
+    public class DisboardChannel
     {
         public SendType Send { get; }
         public SendImageType SendImage { get; }
         public SendImagesType SendImages { get; }
         public string URL { get; }
 
-        internal protected Channel(DiscordChannel channel, ConcurrentQueue<Task> messageQueue)
+        internal protected DisboardChannel(DiscordChannel channel, ConcurrentQueue<Task> messageQueue)
         {
             Send = (message, embed) => messageQueue.Enqueue(channel.SendMessageAsync(message, embed: embed));
             SendImage = (stream, message, embed) => messageQueue.Enqueue(channel.SendFileAsync(stream, file_name: "image.png", content: message, embed: embed));

@@ -2,23 +2,23 @@
 
 namespace Yacht
 {
-    class Yacht : Game
+    class Yacht : DisboardGame
     {
         IGameState State { get; set; } = NullState.New;
 
-        public Yacht(GameInitializeData initData) : base(initData) { }
+        public Yacht(DisboardGameInitData initData) : base(initData) { }
 
         public override void Start()
             => State = TurnState.New(this, InitialPlayers);
 
-        public override void OnGroup(Player player, string message)
+        public override void OnGroup(DisboardPlayer player, string message)
             => State = State.OnGroup(player, message);
     }
 
-    class YachtFactory : IGameFactory
+    class YachtFactory : IDisboardGameFactory
     {
-        public Game New(GameInitializeData initData) => new Yacht(initData);
-        public void OnHelp(Channel channel)
+        public DisboardGame New(DisboardGameInitData initData) => new Yacht(initData);
+        public void OnHelp(DisboardChannel channel)
         {
             channel.Send(
                 "`리롤하려면 리롤할 주사위를 입력하세요. 예시: R 446`\n" +

@@ -4,23 +4,23 @@ using System.Windows.Media;
 
 namespace EchoVisual
 {
-    class EchoVisual : Game
+    class EchoVisual : DisboardGame
     {
-        public EchoVisual(GameInitializeData initData) : base(initData) { }
+        public EchoVisual(DisboardGameInitData initData) : base(initData) { }
         public override void Start()
         {
             var image = Render(() => new Label { Foreground = Brushes.White, Content = "EchoVisual started." });
             SendImage(image);
         }
-        public override void OnGroup(Player player, string message)
+        public override void OnGroup(DisboardPlayer player, string message)
         {
             var image = Render(() => new MyLabel(message));
             SendImage(image);
         }
     }
-    class EchoVisualFactory : IGameFactory
+    class EchoVisualFactory : IDisboardGameFactory
     {
-        public Game New(GameInitializeData initData) => new EchoVisual(initData);
-        public void OnHelp(Channel channel) => channel.Send("`EchoVisual`");
+        public DisboardGame New(DisboardGameInitData initData) => new EchoVisual(initData);
+        public void OnHelp(DisboardChannel channel) => channel.Send("`EchoVisual`");
     }
 }

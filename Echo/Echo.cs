@@ -1,7 +1,7 @@
 ﻿using Disboard;
-class Echo : Game
+class Echo : DisboardGame
 {
-    public Echo(GameInitializeData initData) : base(initData) { }
+    public Echo(DisboardGameInitData initData) : base(initData) { }
     public override void Start() => Send("`Echo Started.`");
-    public override void OnGroup(Player player, string message) => Send(message);
+    public override void OnGroup(DisboardPlayer player, string message) => Send(message);
 }

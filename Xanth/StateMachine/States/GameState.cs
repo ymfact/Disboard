@@ -4,13 +4,13 @@ namespace Xanth
 {
     abstract class GameState : IGameState
     {
-        public readonly Game ctx;
+        public readonly DisboardGame ctx;
 
-        protected GameState(Game ctx)
+        protected GameState(DisboardGame ctx)
             => this.ctx = ctx;
 
-        public abstract IGameState OnGroup(Disboard.Player player, string message);
+        public abstract IGameState OnGroup(Disboard.DisboardPlayer player, string message);
 
-        IGameState IGameState.OnGroup(Disboard.Player player, string message) => OnGroup(player, message);
+        IGameState IGameState.OnGroup(Disboard.DisboardPlayer player, string message) => OnGroup(player, message);
     }
 }
