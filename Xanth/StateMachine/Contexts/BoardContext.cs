@@ -1,6 +1,7 @@
 ﻿using Disboard;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,6 +16,7 @@ namespace Xanth
         public Board Board { get; }
         public Dictionary<Player, Marker> MarkerDict { get; }
         public Dictionary<Player, bool> NotMovedYet { get; }
+        public Dictionary<Player, bool> IsDropped { get; }
         public int BoardSize { get; }
 
         public static BoardContext New(IReadOnlyList<Player> players)
@@ -33,11 +35,12 @@ namespace Xanth
             else
             {
                 BoardSize = 5;
-                markers = new[] { new Marker(0, 4, BoardSize), new Marker(0, 0, BoardSize), new Marker(4, 0, BoardSize), new Marker(4, 4, BoardSize) };
+                markers = new[] { new Marker(0, 0, BoardSize), new Marker(0, 4, BoardSize), new Marker(4, 4, BoardSize), new Marker(4, 0, BoardSize) };
             }
 
             MarkerDict = players.Enumerate().ToDictionary(_ => _.elem, _ => markers[_.index]);
             NotMovedYet = players.ToDictionary(_ => _, _ => true);
+            IsDropped = players.ToDictionary(_ => _, _ => false);
 
             Random random = new Random();
             int rollDice() => random.Next(1, 7);
@@ -165,6 +168,9 @@ namespace Xanth
 
             foreach (var (playerIndex, (player, marker)) in Players.Zip(Players.Select(_ => MarkerDict[_])).Enumerate())
             {
+                if (IsDropped[player])
+                    continue;
+
                 var brush = brushes[playerIndex];
                 string text = $"\n{player.Name}";
                 var label = grid.Add(1 + marker.Row, 1 + marker.Column, text);
@@ -172,6 +178,58 @@ namespace Xanth
             }
 
             return grid;
+        }
+        public Dictionary<Slot, Slot.Permission> GetReachables(Player player, int[] dices, int remainMove)
+        {
+            var marker = MarkerDict[player];
+            var permissions = Board.Slots.SelectMany((slots, row) => slots.Select((slot, column) => ((row, column), slot.GetPermission(player, dices))))
+                .ToDictionary(_ => _.Item1, _ => _.Item2);
+
+            // 겹칠 수 없음
+            foreach (var slot in Players.Where(_ => _ != player && IsDropped[_] == false).Select(_ => MarkerDict[_]).Select(_ => (_.Row, _.Column)))
+                permissions[slot] = Slot.Permission.Unreachable;
+
+            var currentPositions = new[] { (marker.Row, marker.Column) }.ToImmutableSortedSet();
+            var reachables = new SortedSet<(int, int)> { };
+            var overwritables = new SortedSet<(int, int)> { };
+
+            foreach (var _ in Enumerable.Range(0, remainMove))
+            {
+                currentPositions = currentPositions.SelectMany(_ =>
+                {
+                    var nextPositions = new SortedSet<(int, int)> { };
+                    foreach (var slot in new[] { (_.Row - 1, _.Column), (_.Row + 1, _.Column), (_.Row, _.Column - 1), (_.Row, _.Column + 1) })
+                    {
+                        var permission = permissions.GetValueOrDefault(slot, Slot.Permission.Unreachable);
+                        if (permission >= Slot.Permission.Reachable)
+                            reachables.Add(slot);
+                        if (permission == Slot.Permission.Overwritable)
+                            overwritables.Add(slot);
+                        if (permission >= Slot.Permission.Reachable)
+                            nextPositions.Add(slot);
+                    }
+                    return nextPositions;
+                }).ToImmutableSortedSet();
+            }
+
+            // 이동이 처음이면 자기 자리도 칠할 수 있지만, 갇힌 상태라면 아님
+            if (NotMovedYet[player] && reachables.Count > 0)
+                overwritables.Add((marker.Row, marker.Column));
+
+            var result = reachables.ToDictionary(_ => Board.Slots[_.Item1][_.Item2], _ => Slot.Permission.Reachable);
+            overwritables.ToList().ForEach(_ => result[Board.Slots[_.Item1][_.Item2]] = Slot.Permission.Overwritable);
+            return result;
+        }
+        public bool IsStuck(int playerIndex, int[] dices)
+        {
+            var player = Players[playerIndex];
+            var reachables = GetReachables(player, dices, 1);
+            return reachables.Count == 0;
+        }
+        public void Drop(int playerIndex)
+        {
+            var player = Players[playerIndex];
+            IsDropped[player] = true;
         }
     }
 }

@@ -10,6 +10,7 @@ namespace Xanth
         public int[] Dices { get; }
         public int RemainReroll { get; }
         public int RemainMove { get; }
+        public bool IsStuckInThisTurn { get; }
 
         protected static Random Random { get; } = new Random();
         protected static int RollDice => Random.Next(6) + 1;
@@ -19,34 +20,42 @@ namespace Xanth
             int playerIndex,
             int[] dices,
             int remainReroll,
-            int remainMove
+            int remainMove,
+            bool isStuckInThisTurn
             )
         {
             PlayerIndex = playerIndex;
             Dices = dices;
             RemainReroll = remainReroll;
             RemainMove = remainMove;
+            IsStuckInThisTurn = isStuckInThisTurn;
         }
 
-        public static TurnContext New()
+        public static TurnContext New(BoardContext board)
             => Next_(
+                board: board,
                 nextPlayerIndex: 0
                 );
 
-        public TurnContext Next(int nextPlayerIndex)
+        public TurnContext Next(BoardContext board, int nextPlayerIndex)
             => Next_(
-                nextPlayerIndex
+                board: board,
+                nextPlayerIndex: nextPlayerIndex
                 );
 
-        static TurnContext Next_(int nextPlayerIndex)
-            => new TurnContext(
+        static TurnContext Next_(BoardContext board, int nextPlayerIndex)
+        {
+            var newDices = RollFourDices;
+            return new TurnContext(
                 playerIndex: nextPlayerIndex,
-                dices: RollFourDices,
+                dices: newDices,
                 remainReroll: 3,
-                remainMove: 4
+                remainMove: 4,
+                isStuckInThisTurn: board.IsStuck(nextPlayerIndex, newDices)
                 );
+        }
 
-        public TurnContext Reroll(IList<int> dicesToReroll)
+        public TurnContext Reroll(BoardContext board, IList<int> dicesToReroll)
         {
             var newDices = Dices.ToList(); //copy
             foreach (int diceToReroll in dicesToReroll)
@@ -61,12 +70,14 @@ namespace Xanth
                 }
             }
             newDices.AddRange(Enumerable.Range(0, 4 - newDices.Count).Select(_ => RollDice));
+            var newDicesArray = newDices.ToArray();
 
             return new TurnContext(
                 playerIndex: PlayerIndex,
-                dices: newDices.ToArray(),
+                dices: newDicesArray,
                 remainReroll: dicesToReroll.Count - 1,
-                remainMove: dicesToReroll.Count
+                remainMove: dicesToReroll.Count,
+                isStuckInThisTurn: IsStuckInThisTurn && board.IsStuck(PlayerIndex, newDicesArray)
                 );
         }
 
@@ -75,7 +86,8 @@ namespace Xanth
                 playerIndex: PlayerIndex,
                 dices: Dices,
                 remainReroll: 0,
-                remainMove: RemainMove - 1
+                remainMove: RemainMove - 1,
+                isStuckInThisTurn: false
                 );
     }
 }

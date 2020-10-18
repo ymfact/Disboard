@@ -6,14 +6,14 @@ using static Disboard.Macro;
 
 namespace Xanth
 {
-    partial class TurnState : GameState
+    class TurnState : GameState
     {
         static public TurnState New(Game ctx, IReadOnlyList<Player> players)
         {
             new XanthFactory().OnHelp(ctx.Channel);
 
             var board = BoardContext.New(players);
-            var turn = TurnContext.New();
+            var turn = TurnContext.New(board);
             var next = StartTurn(ctx: ctx, board: board, turn: turn);
 
             return next;
@@ -74,7 +74,7 @@ namespace Xanth
                 var next = new TurnState(
                    ctx: ctx,
                    board: Board,
-                   turn: Turn.Reroll(dicesToReroll)
+                   turn: Turn.Reroll(Board, dicesToReroll)
                    );
                 next.PrintTurn();
                 return next;
@@ -135,33 +135,54 @@ namespace Xanth
         {
             if (Board.Board.Slots.All(_ => _.All(_ => _.Owner != null)))
             {
-                var image = ctx.Render(() => Board.GetBoardGrid(null));
-
                 var scores = Board.Board.Slots.SelectMany(_ => _).GroupBy(_ => _.Owner).Select(_ => (_.Key, _.Count()));
                 var highestScore = scores.OrderByDescending(_ => _.Item2).First().Item2;
-                var winners = scores.Where(_ => _.Item2 == highestScore).Select(_ => _.Key!.Name);
+                var winners = scores.Where(_ => _.Item2 == highestScore).Select(_ => _.Key!);
 
-                var embed = new DiscordEmbedBuilder()
-                    .AddField(winners.Count() > 1 ? "Winners" : "Winner", string.Join(", ", winners), inline: true);
-                ctx.SendImage(image, "@here", embed);
-
-                ctx.OnFinish();
-
-                return NullState.New;
+                return Finish(winners);
             }
             else
             {
-                int newPlayerIndex = Turn.PlayerIndex + 1;
-                if (newPlayerIndex >= Board.Players.Count)
+                if (Turn.IsStuckInThisTurn)
+                    Board.Drop(Turn.PlayerIndex);
+
+                int nextPlayerIndex = Turn.PlayerIndex + 1;
+                if (nextPlayerIndex >= Board.Players.Count)
+                    nextPlayerIndex = 0;
+                while (Board.IsDropped[Board.Players[nextPlayerIndex]])
                 {
-                    newPlayerIndex = 0;
+                    nextPlayerIndex += 1;
+                    if (nextPlayerIndex >= Board.Players.Count)
+                        nextPlayerIndex = 0;
                 }
-                return StartTurn(newPlayerIndex);
+
+                if (Board.IsDropped.Values.Where(_ => _ == false).Count() == 1)
+                {
+                    return Finish(new[] { Board.Players[nextPlayerIndex] });
+                }
+                else
+                {
+                    return StartTurn(
+                        ctx: ctx,
+                        board: Board,
+                        turn: Turn.Next(Board, nextPlayerIndex)
+                        );
+                }
             }
         }
 
-        TurnState StartTurn(int nextPlayerIndex)
-            => StartTurn(ctx, Board, Turn.Next(nextPlayerIndex));
+        IGameState Finish(IEnumerable<Player> winners)
+        {
+            var image = ctx.Render(() => Board.GetBoardGrid(null));
+
+            var embed = new DiscordEmbedBuilder()
+                .AddField(winners.Count() > 1 ? "Winners" : "Winner", string.Join(", ", winners.Select(_ => _.Name)), inline: true);
+            ctx.SendImage(image, "@here", embed);
+
+            ctx.OnFinish();
+
+            return NullState.New;
+        }
 
         static TurnState StartTurn(Game ctx, BoardContext board, TurnContext turn)
         {
@@ -176,7 +197,7 @@ namespace Xanth
 
         void PrintTurn()
         {
-            var image = ctx.Render(() => Board.GetBoardGrid((Turn.PlayerIndex, GetReachables())));
+            var image = ctx.Render(() => Board.GetBoardGrid((Turn.PlayerIndex, Board.GetReachables(CurrentPlayer, Turn.Dices, Turn.RemainMove))));
 
             var rank = Rank.Calculate(Turn.Dices);
             var rerollTexts = Enumerable.Range(0, Turn.RemainReroll).Select(_ => ":arrows_counterclockwise:");
@@ -195,6 +216,8 @@ namespace Xanth
             if (Turn.RemainReroll > 0)
                 embed.AddField("Reroll", rerollString, inline: true);
             embed.AddField("Move", moveString, inline: true); ;
+            if (Turn.IsStuckInThisTurn)
+                embed.AddField("Warning", "Stuck!", inline: true);
             ctx.SendImage(image, $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn", embed);
         }
     }
