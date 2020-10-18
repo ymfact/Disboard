@@ -9,6 +9,7 @@ namespace Disboard
     {
         public Game(GameInitializeData initData)
         {
+            IsDebug = initData.IsDebug;
             Channel = new Channel(initData.Channel, initData.MessageQueue);
             InitialPlayers = initData.Players;
             OnFinish = () => initData.OnFinish(initData.Channel.Id);
@@ -16,7 +17,9 @@ namespace Disboard
             Render = controlConstructor => initData.Dispatcher.Invoke(() => controlConstructor().Render());
         }
 
-        ConcurrentQueue<Task> IGame.MessageQueue { get => MessageQueue; }
+        bool IGame.IsDebug => IsDebug;
+        internal bool IsDebug { get; }
+        ConcurrentQueue<Task> IGame.MessageQueue => MessageQueue;
         internal ConcurrentQueue<Task> MessageQueue { get; }
 
         public Channel Channel { get; }

@@ -1,19 +1,16 @@
-﻿using DSharpPlus.Entities;
-using System;
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace Disboard
 {
     using UserIdType = UInt64;
-    public sealed class Player
+    public abstract class Player
     {
-        internal Player(DiscordMember member, DiscordDmChannel dMChannel, ConcurrentQueue<Task> messageQueue)
+        internal Player(UserIdType id, string name, string mention, Channel channel)
         {
-            Id = member.Id;
-            Name = member.Username;
-            Mention = member.Mention;
-            Channel = new Channel(dMChannel, messageQueue);
+            Id = id;
+            Name = name;
+            Mention = mention;
+            Channel = channel;
         }
         internal UserIdType Id { get; }
         public string Name { get; }

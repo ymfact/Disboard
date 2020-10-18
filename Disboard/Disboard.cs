@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -48,6 +49,13 @@ namespace Disboard
             Application.Run();
         }
 
+        async Task NewDebugGame(DiscordChannel discordChannel, int mockPlayerCount)
+        {
+            var messageQueue = new ConcurrentQueue<Task>();
+            var channel = new Channel(discordChannel, new ConcurrentQueue<Task>());
+            var mockPlayers = Enumerable.Range(0, mockPlayerCount).Select(_ => new MockPlayer(_, discordChannel.Guild.Owner, channel) as Player).ToList();
+            await NewGame_(discordChannel, mockPlayers, messageQueue, isDebug: true);
+        }
         async Task NewGame(DiscordChannel channel, IEnumerable<DiscordUser> users)
         {
             if (users.Count() == 0)
@@ -55,13 +63,17 @@ namespace Disboard
                 users = channel.Guild.Members.Where(_ => !_.IsBot && !_.IsCurrent && _.Presence != null && _.Presence.Status == UserStatus.Online);
                 await channel.SendMessageAsync("`참가 인원을 입력하지 않는 경우, 현재 온라인인 유저들로 게임이 시작됩니다.`");
             }
+            var random = new Random();
             var userIds = users.Select(_ => _.Id);
             var members = channel.Guild.Members.Where(_ => userIds.Contains(_.Id));
             var dMChannels = await Task.WhenAll(members.Select(_ => _.CreateDmChannelAsync()));
-            var random = new Random();
             var messageQueue = new ConcurrentQueue<Task>();
-            var players = members.Zip(dMChannels).Select(_ => new Player(_.First, _.Second, messageQueue)).OrderBy(_ => random.Next()).ToList();
-            var gameInitializeData = new GameInitializeData(channel, players, OnFinish, Application.Dispatcher, messageQueue);
+            var players = members.Zip(dMChannels).Select(_ => new RealPlayer(_.First, _.Second, messageQueue) as Player).OrderBy(_ => random.Next()).ToList();
+            await NewGame_(channel, players, messageQueue);
+        }
+        async Task NewGame_(DiscordChannel channel, List<Player> players, ConcurrentQueue<Task> messageQueue, bool isDebug = false)
+        {
+            var gameInitializeData = new GameInitializeData(isDebug, channel, players, OnFinish, Application.Dispatcher, messageQueue);
             Game game = GameFactory.New(gameInitializeData);
 
             OnFinish(channel.Id);
@@ -70,7 +82,7 @@ namespace Disboard
                 var gameUsesDM = game as IGameUsesDM;
                 foreach (var player in players)
                 {
-                    if (GamesByUsers.ContainsKey(player.Id))
+                    if (GamesByUsers.TryGetValue(player.Id, out var existingGame) && existingGame != game)
                     {
                         player.DM("`기존에 진행중이던 게임이 있습니다. 기존 게임에 다시 참여하려면 기존 채널에서 BOT restoredm을 입력하세요.`");
                         GamesByUsers.Remove(player.Id, out _);
@@ -90,7 +102,6 @@ namespace Disboard
                 Log(e.ToString());
             }
         }
-
         void OnFinish(ChannelIdType channelId)
         {
             if (Games.ContainsKey(channelId))
@@ -118,11 +129,9 @@ namespace Disboard
                     return;
 
                 var channels = (await Task.WhenAll(_.Client.Guilds.Values.Select(_ => GetDebugChannels(_)))).SelectMany(_ => _);
-                await Task.WhenAll(channels.Select(async channel =>
+                await Task.WhenAll(channels.Select(async _ =>
                 {
-                    await channel.SendMessageAsync("`Disboard started.`\n`BOT start @참가인원1 @참가인원2... 로 게임을 시작할 수 있습니다.`");
-                    DiscordUser[] empty = { };
-                    await NewGame(channel, empty);
+                    await NewDebugGame(_.channel, _.mockPlayerCount);
                 }));
 
                 IsInitialized = true;
@@ -156,10 +165,11 @@ namespace Disboard
                 Games.Remove(channel.Id, out _);
             return Task.CompletedTask;
         }
-        async Task<IEnumerable<DiscordChannel>> GetDebugChannels(DiscordGuild guild)
+        async Task<IEnumerable<(DiscordChannel channel, int mockPlayerCount)>> GetDebugChannels(DiscordGuild guild)
         {
+            var regex = new Regex("debug([0-9]+)");
             var channels = await guild.GetChannelsAsync();
-            return channels.Where(_ => _.Topic != null && _.Topic.ToLower().Contains("debug"));
+            return channels.Where(_ => _.Topic != null && regex.IsMatch(_.Topic.ToLower())).Select(_ => (_, int.Parse(regex.Match(_.Topic.ToLower()).Groups[1].Value)));
         }
 
         Task PrintDesc(DiscordChannel channel)
@@ -193,6 +203,21 @@ namespace Disboard
                     var player = game.InitialPlayers.Where(_ => _.Id == authorId).FirstOrDefault();
                     if (player != null)
                     {
+
+                        var split = content.Split();
+                        if (game.IsDebug)
+                        {
+                            if (split.Length > 0 && int.TryParse(split[0], out int playerIndex) && 0 <= playerIndex && playerIndex < game.InitialPlayers.Count)
+                            {
+                                player = game.InitialPlayers[playerIndex];
+                                content = string.Join(' ', split.Skip(1));
+                            }
+                            else
+                            {
+                                return;
+                            }
+                        }
+
                         try
                         {
                             game.OnDM(player, content);
@@ -328,6 +353,19 @@ namespace Disboard
                         var player = game.InitialPlayers.Where(_ => _.Id == authorId).FirstOrDefault();
                         if (player != null)
                         {
+                            if (game.IsDebug)
+                            {
+                                if(split.Count > 0 && int.TryParse(split[0], out int playerIndex) && 0 <= playerIndex && playerIndex < game.InitialPlayers.Count)
+                                {
+                                    player = game.InitialPlayers[playerIndex];
+                                    content = string.Join(' ', split.Skip(1));
+                                }
+                                else
+                                {
+                                    return;
+                                }
+                            }
+
                             try
                             {
                                 game.OnGroup(player, content);

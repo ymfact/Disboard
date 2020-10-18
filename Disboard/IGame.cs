@@ -6,6 +6,7 @@ namespace Disboard
 {
     public interface IGame
     {
+        internal bool IsDebug { get; }
         internal ConcurrentQueue<Task> MessageQueue { get; }
 
         IReadOnlyList<Player> InitialPlayers { get; }
