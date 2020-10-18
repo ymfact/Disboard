@@ -10,22 +10,18 @@ namespace Xanth
 {
     class BoardContext
     {
+        public IReadOnlyDictionary<Disboard.Player, Player> PlayerDict { get; }
         public IReadOnlyList<Player> Players { get; }
         public IReadOnlyList<int> BannedOnRows { get; }
         public IReadOnlyList<int> BannedOnColumns { get; }
         public Board Board { get; }
-        public Dictionary<Player, Marker> MarkerDict { get; }
-        public Dictionary<Player, bool> NotMovedYet { get; }
-        public Dictionary<Player, bool> IsDropped { get; }
         public int BoardSize { get; }
 
-        public static BoardContext New(IReadOnlyList<Player> players)
+        public static BoardContext New(IReadOnlyList<Disboard.Player> players)
             => new BoardContext(players);
 
-        BoardContext(IReadOnlyList<Player> players)
+        BoardContext(IReadOnlyList<Disboard.Player> players)
         {
-            Players = players;
-
             IList<Marker> markers;
             if (players.Count == 2)
             {
@@ -38,9 +34,8 @@ namespace Xanth
                 markers = new[] { new Marker(0, 0, BoardSize), new Marker(0, 4, BoardSize), new Marker(4, 4, BoardSize), new Marker(4, 0, BoardSize) };
             }
 
-            MarkerDict = players.Enumerate().ToDictionary(_ => _.elem, _ => markers[_.index]);
-            NotMovedYet = players.ToDictionary(_ => _, _ => true);
-            IsDropped = players.ToDictionary(_ => _, _ => false);
+            PlayerDict = players.Enumerate().ToDictionary(_ => _.elem, _ => new Player(players, _.elem, markers[_.index]));
+            Players = players.Select(_ => PlayerDict[_]).ToList();
 
             Random random = new Random();
             int rollDice() => random.Next(1, 7);
@@ -51,13 +46,13 @@ namespace Xanth
         }
         public void Submit(Player currentPlayer, string initials, int[] dices)
         {
-            Marker marker = MarkerDict[currentPlayer];
+            Marker marker = currentPlayer.Marker;
 
             List<Slot> slotsToWrite = new List<Slot> { };
             int len = initials.Length;
             for (int i = 0; i < len; i++)
             {
-                if (NotMovedYet[currentPlayer] && i == 0)
+                if (currentPlayer.NotMovedYet && i == 0)
                 {
                     if (initials[0] == '!')
                         continue;
@@ -83,7 +78,7 @@ namespace Xanth
                 else
                     throw new InvalidKeywordException();
 
-                bool overlapped = Players.Where(_ => _ != currentPlayer).Select(_ => MarkerDict[_]).Select(_ => (_.Row, _.Column)).Any(_ => _ == (marker.Row, marker.Column));
+                bool overlapped = Players.Where(_ => _ != currentPlayer).Select(_ => _.Marker).Select(_ => (_.Row, _.Column)).Any(_ => _ == (marker.Row, marker.Column));
                 if (overlapped)
                     throw new MoveProhibitedException();
 
@@ -107,8 +102,8 @@ namespace Xanth
             {
                 slot.Write(currentPlayer, rank);
             }
-            MarkerDict[currentPlayer] = marker;
-            NotMovedYet[currentPlayer] = false;
+            currentPlayer.Marker = marker;
+            currentPlayer.NotMovedYet = false;
         }
 
         public Disgrid.Disgrid GetBoardGrid((int playerIndex, Dictionary<Slot, Slot.Permission> reachables)? CurrentState)
@@ -125,8 +120,6 @@ namespace Xanth
             // 그리드 전역에 스타일을 추가할 수 있습니다.
             grid.AddStyle<Label>(Label.FontSizeProperty, 12.0);
 
-            var darkBrushes = Players.Count == 2 ? new[] { "#01326B".Brush(), "#6B0900".Brush() } : new[] { "#6B0A00".Brush(), "#6B5D0B".Brush(), "#0B6B37".Brush(), "#0E056B".Brush() };
-            var brushes = Players.Count == 2 ? new[] { "#005AC2".Brush(), "#C21000".Brush() } : new[] { "#C21200".Brush(), "#C2A813".Brush(), "#13C264".Brush(), "#190AC2".Brush() };
             var transparentWhite = "#99AAAAAA".Brush();
 
             foreach (var (row, banned) in BannedOnRows.Enumerate())
@@ -154,7 +147,7 @@ namespace Xanth
                         int ownerIndex = Players.FindIndex(_ => _ == slot.Owner)!.Value;
                         label.FontWeight = FontWeights.Bold;
                         label.FontSize = 14;
-                        label.Background = darkBrushes[ownerIndex];
+                        label.Background = slot.Owner.DarkColor.Brush();
                     }
 
                     if (CurrentState.HasValue)
@@ -166,19 +159,19 @@ namespace Xanth
                         if (reachability == Slot.Permission.Reachable)
                             border.BorderBrush = transparentWhite;
                         if (reachability == Slot.Permission.Overwritable)
-                            border.BorderBrush = brushes[CurrentState.Value.playerIndex];
+                            border.BorderBrush = Players[CurrentState.Value.playerIndex].Color.Brush();
 
                     }
                 }
 
-            foreach (var (playerIndex, (player, marker)) in Players.Zip(Players.Select(_ => MarkerDict[_])).Enumerate())
+            foreach (var (playerIndex, player) in Players.Enumerate())
             {
-                if (IsDropped[player])
+                if (player.IsDropped)
                     continue;
 
-                var brush = brushes[playerIndex];
-                string text = $"\n{player.Name}";
-                var label = grid.Add(1 + marker.Row, 1 + marker.Column, text);
+                var brush = player.Color.Brush();
+                string text = $"\n{player.Disboard.Name}";
+                var label = grid.Add(1 + player.Marker.Row, 1 + player.Marker.Column, text);
                 label.Foreground = brush;
             }
 
@@ -186,15 +179,14 @@ namespace Xanth
         }
         public Dictionary<Slot, Slot.Permission> GetReachables(Player player, int[] dices, int remainMove)
         {
-            var marker = MarkerDict[player];
             var permissions = Board.Slots.SelectMany((slots, row) => slots.Select((slot, column) => ((row, column), slot.GetPermission(player, dices))))
                 .ToDictionary(_ => _.Item1, _ => _.Item2);
 
             // 겹칠 수 없음
-            foreach (var slot in Players.Where(_ => _ != player && IsDropped[_] == false).Select(_ => MarkerDict[_]).Select(_ => (_.Row, _.Column)))
+            foreach (var slot in Players.Where(_ => _ != player && player.IsDropped == false).Select(_ => player.Marker).Select(_ => (_.Row, _.Column)))
                 permissions[slot] = Slot.Permission.Unreachable;
 
-            var currentPositions = new[] { (marker.Row, marker.Column) }.ToImmutableSortedSet();
+            var currentPositions = new[] { (player.Marker.Row, player.Marker.Column) }.ToImmutableSortedSet();
             var reachables = new SortedSet<(int, int)> { };
             var overwritables = new SortedSet<(int, int)> { };
 
@@ -218,8 +210,8 @@ namespace Xanth
             }
 
             // 이동이 처음이면 자기 자리도 칠할 수 있지만, 갇힌 상태라면 아님
-            if (NotMovedYet[player] && reachables.Count > 0)
-                overwritables.Add((marker.Row, marker.Column));
+            if (player.NotMovedYet && reachables.Count > 0)
+                overwritables.Add((player.Marker.Row, player.Marker.Column));
 
             var result = reachables.ToDictionary(_ => Board.Slots[_.Item1][_.Item2], _ => Slot.Permission.Reachable);
             overwritables.ToList().ForEach(_ => result[Board.Slots[_.Item1][_.Item2]] = Slot.Permission.Overwritable);
@@ -232,9 +224,6 @@ namespace Xanth
             return reachables.Count == 0;
         }
         public void Drop(int playerIndex)
-        {
-            var player = Players[playerIndex];
-            IsDropped[player] = true;
-        }
+            =>Players[playerIndex].IsDropped = true;
     }
 }

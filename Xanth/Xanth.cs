@@ -21,7 +21,7 @@ namespace Xanth
             }
         }
 
-        public override void OnGroup(Player player, string message)
+        public override void OnGroup(Disboard.Player player, string message)
             => State = State.OnGroup(player, message);
     }
 

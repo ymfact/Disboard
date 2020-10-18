@@ -8,7 +8,7 @@ namespace Xanth
 {
     class TurnState : GameState
     {
-        static public TurnState New(Game ctx, IReadOnlyList<Player> players)
+        static public TurnState New(Game ctx, IReadOnlyList<Disboard.Player> players)
         {
             new XanthFactory().OnHelp(ctx.Channel);
 
@@ -32,11 +32,11 @@ namespace Xanth
             Turn = turn;
         }
 
-        public Player CurrentPlayer => Board.Players.ToList()[Turn.PlayerIndex];
+        public Player CurrentPlayer => Board.Players[Turn.PlayerIndex];
 
-        public override IGameState OnGroup(Player player, string message)
+        public override IGameState OnGroup(Disboard.Player player, string message)
         {
-            if (player == CurrentPlayer)
+            if (player == CurrentPlayer.Disboard)
             {
                 var split = message.Split();
                 if (split.Length > 0 && split[0].ToLower() == "r")
@@ -156,14 +156,14 @@ namespace Xanth
                 int nextPlayerIndex = Turn.PlayerIndex + 1;
                 if (nextPlayerIndex >= Board.Players.Count)
                     nextPlayerIndex = 0;
-                while (Board.IsDropped[Board.Players[nextPlayerIndex]])
+                while (Board.Players[nextPlayerIndex].IsDropped)
                 {
                     nextPlayerIndex += 1;
                     if (nextPlayerIndex >= Board.Players.Count)
                         nextPlayerIndex = 0;
                 }
 
-                if (Board.IsDropped.Values.Where(_ => _ == false).Count() == 1)
+                if (Board.Players.Where(_ => _.IsDropped == false).Count() == 1)
                 {
                     return Finish(new[] { Board.Players[nextPlayerIndex] });
                 }
@@ -183,7 +183,11 @@ namespace Xanth
             var image = ctx.Render(() => Board.GetBoardGrid(null));
 
             var embed = new DiscordEmbedBuilder()
-                .AddField(winners.Count() > 1 ? "Winners" : "Winner", string.Join(", ", winners.Select(_ => _.Name)), inline: true);
+                .AddField(winners.Count() > 1 ? "Winners" : "Winner", string.Join(", ", winners.Select(_ => _.Disboard.Name)), inline: true);
+
+            if (winners.Count() == 1)
+                embed.Color = new DiscordColor(winners.First().Color);
+
             ctx.SendImage(image, "@here", embed);
 
             ctx.OnFinish();
@@ -226,7 +230,7 @@ namespace Xanth
                 embed.AddField("Stuck!", "이대로 턴 종료시 패배합니다.", inline: true);
             else
                 embed.AddField("Move", moveString, inline: true);
-            ctx.SendImage(image, $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn", embed);
+            ctx.SendImage(image, $"{CurrentPlayer.Disboard.Mention} {CurrentPlayer.Disboard.Name}'s turn", embed);
         }
     }
 }

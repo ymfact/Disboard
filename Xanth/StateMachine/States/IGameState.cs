@@ -4,6 +4,6 @@ namespace Xanth
 {
     interface IGameState
     {
-        IGameState OnGroup(Player player, string message);
+        IGameState OnGroup(Disboard.Player player, string message);
     }
 }
