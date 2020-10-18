@@ -77,7 +77,7 @@ namespace Xanth
                 dices: newDicesArray,
                 remainReroll: dicesToReroll.Count - 1,
                 remainMove: dicesToReroll.Count,
-                isStuckInThisTurn: IsStuckInThisTurn && board.IsStuck(PlayerIndex, newDicesArray)
+                isStuckInThisTurn: board.IsStuck(PlayerIndex, newDicesArray)
                 );
         }
 

@@ -1,5 +1,8 @@
 ﻿namespace Xanth
 {
+    class MoveAfterGameEndException : System.InvalidOperationException
+    {
+    }
     class OutOfBoardException : System.InvalidOperationException
     {
     }

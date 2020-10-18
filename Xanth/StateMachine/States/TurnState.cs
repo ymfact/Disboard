@@ -89,12 +89,7 @@ namespace Xanth
         IGameState Submit(string message)
         {
             var split = message.Split();
-            if (split.Length == 1)
-            {
-                ctx.Send(W("이동할 방향을 입력하세요. 턴을 넘기려면 S !, 이동 후 보드에 쓰지 않으려면 문자 뒤에 !를 입력합니다. 예시: S w!asd"));
-                return this;
-            }
-            if (split.Length > 2)
+            if (split.Length != 2)
             {
                 ctx.Send(W("이동할 방향을 입력하세요. 턴을 넘기려면 S !, 이동 후 보드에 쓰지 않으려면 문자 뒤에 !를 입력합니다. 예시: S w!asd"));
                 return this;
@@ -102,7 +97,14 @@ namespace Xanth
             var initials = split[1];
             if (initials == "!")
             {
-                return ProceedAndStartTurn();
+                if (Turn.IsStuckInThisTurn && Turn.RemainReroll > 0)
+                {
+                    ctx.Send(W("남은 리롤 기회가 있습니다. 이동할 방향을 입력하세요. 이동 후 보드에 쓰지 않으려면 문자 뒤에 !를 입력합니다. 예시: S w!asd"));
+                }
+                else
+                {
+                    return ProceedAndStartTurn();
+                }
             }
             if (initials.Where(_ => _ != '!').Count() > Turn.RemainMove)
             {
@@ -113,6 +115,11 @@ namespace Xanth
             {
                 Board.Submit(CurrentPlayer, initials, Turn.Dices);
                 return ProceedAndStartTurn();
+            }
+            catch (MoveAfterGameEndException)
+            {
+                ctx.Send(W("칸이 모두 채워지면 즉시 게임이 종료되어 추가로 이동할 수 없습니다."));
+                return this;
             }
             catch (MoveProhibitedException)
             {
@@ -215,9 +222,10 @@ namespace Xanth
                     .AddField($"{rank.Initial} `{rank.Name}`", diceString, inline: true);
             if (Turn.RemainReroll > 0)
                 embed.AddField("Reroll", rerollString, inline: true);
-            embed.AddField("Move", moveString, inline: true); ;
             if (Turn.IsStuckInThisTurn)
-                embed.AddField("Warning", "Stuck!", inline: true);
+                embed.AddField("Stuck!", "이대로 턴 종료시 패배합니다.", inline: true);
+            else
+                embed.AddField("Move", moveString, inline: true);
             ctx.SendImage(image, $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn", embed);
         }
     }

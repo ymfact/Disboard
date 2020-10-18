@@ -95,6 +95,11 @@ namespace Xanth
                 bool isOverwritable = slot.GetPermission(currentPlayer, dices) == Slot.Permission.Overwritable;
                 if (false == isSkipWriting && isOverwritable)
                     slotsToWrite.Add(slot);
+
+                var emptySlots = Board.Slots.SelectMany(_ => _.Where(_ => _.Owner == null)).Where(_ => slotsToWrite.Contains(_) == false);
+                var isGameEnd = emptySlots.Count() == 0;
+                if (isGameEnd && i != len - 1)
+                    throw new MoveAfterGameEndException();
             }
 
             var rank = Rank.Calculate(dices);
