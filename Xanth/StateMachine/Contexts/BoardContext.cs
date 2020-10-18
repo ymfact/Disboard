@@ -183,7 +183,7 @@ namespace Xanth
                 .ToDictionary(_ => _.Item1, _ => _.Item2);
 
             // 겹칠 수 없음
-            foreach (var slot in Players.Where(_ => _ != player && player.IsDropped == false).Select(_ => player.Marker).Select(_ => (_.Row, _.Column)))
+            foreach (var slot in Players.Where(_ => (_ != player) && (_.IsDropped == false)).Select(_ => _.Marker).Select(_ => (_.Row, _.Column)))
                 permissions[slot] = Slot.Permission.Unreachable;
 
             var currentPositions = new[] { (player.Marker.Row, player.Marker.Column) }.ToImmutableSortedSet();
