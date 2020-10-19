@@ -131,7 +131,10 @@ namespace Disboard
                 var channels = (await Task.WhenAll(_.Client.Guilds.Values.Select(_ => GetDebugChannels(_)))).SelectMany(_ => _);
                 await Task.WhenAll(channels.Select(async _ =>
                 {
-                    await NewDebugGame(_.channel, _.mockPlayerCount);
+                    if (_.mockPlayerCount == "")
+                        await NewGame(_.channel, new DiscordUser[] { });
+                    else if (int.TryParse(_.mockPlayerCount, out int mockPlayerCount))
+                        await NewDebugGame(_.channel, mockPlayerCount);
                 }));
 
                 IsInitialized = true;
@@ -165,11 +168,11 @@ namespace Disboard
                 Games.Remove(channel.Id, out _);
             return Task.CompletedTask;
         }
-        async Task<IEnumerable<(DiscordChannel channel, int mockPlayerCount)>> GetDebugChannels(DiscordGuild guild)
+        async Task<IEnumerable<(DiscordChannel channel, string mockPlayerCount)>> GetDebugChannels(DiscordGuild guild)
         {
-            var regex = new Regex("debug([0-9]+)");
+            var regex = new Regex("debug([0-9]*)");
             var channels = await guild.GetChannelsAsync();
-            return channels.Where(_ => _.Topic != null && regex.IsMatch(_.Topic.ToLower())).Select(_ => (_, int.Parse(regex.Match(_.Topic.ToLower()).Groups[1].Value)));
+            return channels.Where(_ => _.Topic != null && regex.IsMatch(_.Topic.ToLower())).Select(_ => (_, regex.Match(_.Topic.ToLower()).Groups[1].Value));
         }
 
         Task PrintDesc(DiscordChannel channel)
