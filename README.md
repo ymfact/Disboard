@@ -44,7 +44,7 @@ class Program
 게임에 참가하지 않는 유저는 `BOT restart` 명령어 외에는 게임에 영향을 주지 않습니다.
 클라이언트는 채널마다 서로 다른 게임을 동시에 진행할 수 있습니다.
 한 플레이어는 여러 게임에 참가할 수 있습니다.
-IGameFactory를 구현하면 `BOT help` 명령어를 지원할 수 있습니다.
+IDisboardGameFactory를 구현하면 `BOT help` 명령어를 지원할 수 있습니다.
 
 #### Image from WPF Controls
 WPF 컨트롤을 사용하여 이미지를 그릴 수 있습니다. EchoVisual.cs를 예제로써 참고하세요.
@@ -59,7 +59,7 @@ BoardContext.cs의 GetBoardGrid를 예제로써 참고하세요.
 사용하려면 Main 함수 윗줄에 `[System.STAThread()]`를 추가해야 합니다.
 
 #### DM
-IGameUsesDM을 상속하면 DM을 사용할 수 있습니다.
+DisboardGameUsingDM을 상속하면 DM을 사용할 수 있습니다.
 플레이어의 비밀 입력이 필요할 때 봇은 플레이어에게 DM을 보냅니다.
 그 후 다시 그룹 채널로 돌아가기 위해 서버 링크를 제공할 수도 있습니다.
 플레이어가 작성하는 DM은 플레이어마다 하나의 게임으로만 전달되며, 플레이어는 `BOT restoredm` 명령어를 이용해 플레이어가 작성하는 DM이 어느 게임으로 전달될지 선택할 수 있습니다.
