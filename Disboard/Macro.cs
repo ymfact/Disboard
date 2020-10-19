@@ -2,13 +2,21 @@
 
 namespace Disboard
 {
+    /// <summary>
+    /// 간단하고 유용한 매크로 모음입니다.
+    /// </summary>
     public static class Macro
     {
-        public static Color Color(this string html)
+        static Color Color(this string html)
         {
             var color = System.Drawing.ColorTranslator.FromHtml(html);
             return System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B);
         }
+        /// <summary>
+        /// 색상 문자열을 WPF 컨트롤에 사용할 수 있는 브러쉬로 만듭니다.
+        /// </summary>
+        /// <param name="html"></param>
+        /// <returns></returns>
         public static Brush Brush(this string html)
             => new SolidColorBrush(html.Color());
 

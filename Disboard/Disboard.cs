@@ -18,11 +18,37 @@ namespace Disboard
     using GuildIdType = UInt64;
     using UserIdType = UInt64;
 
+    /// <summary>
+    /// 메시지를 전송합니다.
+    /// </summary>
+    /// <param name="message">메시지를 작성할 수 있습니다.</param>
+    /// <param name="embed">Discord embed를 포함할 수 있습니다. 메시지의 아래에 표시됩니다.</param>
     public delegate void SendType(string message, DiscordEmbed? embed = null);
+    /// <summary>
+    /// 한 장의 이미지를 전송합니다.
+    /// </summary>
+    /// <param name="stream">이미지를 포함하는 스트림입니다. Render 함수를 이용해서 생성할 수 있습니다.</param>
+    /// <param name="message">메시지를 작성할 수 있습니다. 이미지의 위에 표시됩니다.</param>
+    /// <param name="embed">Discord embed를 포함할 수 있습니다. 이미지의 아래에 표시됩니다.</param>
     public delegate void SendImageType(Stream stream, string? message = null, DiscordEmbed? embed = null);
+    /// <summary>
+    /// 여러 장의 이미지를 전송합니다.
+    /// </summary>
+    /// <param name="streams">이미지를 포함하는 스트림입니다. Render 함수를 이용해서 생성할 수 있습니다.</param>
+    /// <param name="message">메시지를 작성할 수 있습니다. 이미지의 위에 표시됩니다.</param>
+    /// <param name="embed">Discord embed를 포함할 수 있습니다. 이미지의 아래에 표시됩니다.</param>
     public delegate void SendImagesType(IReadOnlyList<Stream> streams, string? message = null, DiscordEmbed? embed = null);
+    /// <summary>
+    /// WPF 컨트롤을 생성하고, 이미지를 그립니다.
+    /// </summary>
+    /// <param name="controlConstructor">WPF 컨트롤의 생성과 수정은 반드시 이 안에서 이루어져야 합니다.</param>
+    /// <returns>PNG 이미지를 포함하는 스트림을 반환합니다.</returns>
     public delegate Stream RenderType(Func<Control> controlConstructor);
 
+    /// <summary>
+    /// Online Text-Based Board Game Platform using Discord
+    /// </summary>
+    /// <typeparam name="GameFactoryType">파라미터가 없는 public 생성자가 있어야 합니다. 기본적인 기능만을 갖고있는 DisboardGameFactory를 사용할 수 있습니다.</typeparam>
     public sealed class Disboard<GameFactoryType> where GameFactoryType : IDisboardGameFactory, new()
     {
         bool IsInitialized = false;
@@ -33,6 +59,10 @@ namespace Disboard
         Dictionary<UserIdType, DisboardGameUsingDM> GamesByUsers { get; } = new Dictionary<UserIdType, DisboardGameUsingDM>();
         DispatcherTimer? TickTimer { get; set; } = null;
 
+        /// <summary>
+        /// Disboard를 실행합니다. 실행을 블락하므로 프로그램의 마지막줄에 있어야 합니다.
+        /// </summary>
+        /// <param name="token">디스코드 홈페이지에서 토큰을 발급해야 합니다.</param>
         public void Run(string token)
         {
             DiscordClient discord = new DiscordClient(new DiscordConfiguration

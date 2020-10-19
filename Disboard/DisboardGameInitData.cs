@@ -8,6 +8,10 @@ using System.Windows.Threading;
 namespace Disboard
 {
     using ChannelIdType = UInt64;
+
+    /// <summary>
+    /// 게임의 초기화에 필요한 데이터들입니다.
+    /// </summary>
     public sealed class DisboardGameInitData
     {
         internal bool IsDebug { get; }

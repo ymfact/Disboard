@@ -4,11 +4,167 @@
         <name>Disboard</name>
     </assembly>
     <members>
+        <member name="T:Disboard.SendType">
+            <summary>
+            메시지를 전송합니다.
+            </summary>
+            <param name="message">메시지를 작성할 수 있습니다.</param>
+            <param name="embed">Discord embed를 포함할 수 있습니다. 메시지의 아래에 표시됩니다.</param>
+        </member>
+        <member name="T:Disboard.SendImageType">
+            <summary>
+            한 장의 이미지를 전송합니다.
+            </summary>
+            <param name="stream">이미지를 포함하는 스트림입니다. Render 함수를 이용해서 생성할 수 있습니다.</param>
+            <param name="message">메시지를 작성할 수 있습니다. 이미지의 위에 표시됩니다.</param>
+            <param name="embed">Discord embed를 포함할 수 있습니다. 이미지의 아래에 표시됩니다.</param>
+        </member>
+        <member name="T:Disboard.SendImagesType">
+            <summary>
+            여러 장의 이미지를 전송합니다.
+            </summary>
+            <param name="streams">이미지를 포함하는 스트림입니다. Render 함수를 이용해서 생성할 수 있습니다.</param>
+            <param name="message">메시지를 작성할 수 있습니다. 이미지의 위에 표시됩니다.</param>
+            <param name="embed">Discord embed를 포함할 수 있습니다. 이미지의 아래에 표시됩니다.</param>
+        </member>
+        <member name="T:Disboard.RenderType">
+            <summary>
+            WPF 컨트롤을 생성하고, 이미지를 그립니다.
+            </summary>
+            <param name="controlConstructor">WPF 컨트롤의 생성과 수정은 반드시 이 안에서 이루어져야 합니다.</param>
+            <returns>PNG 이미지를 포함하는 스트림을 반환합니다.</returns>
+        </member>
+        <member name="T:Disboard.Disboard`1">
+            <summary>
+            Online Text-Based Board Game Platform using Discord
+            </summary>
+            <typeparam name="GameFactoryType">파라미터가 없는 public 생성자가 있어야 합니다. 기본적인 기능만을 갖고있는 DisboardGameFactory를 사용할 수 있습니다.</typeparam>
+        </member>
+        <member name="M:Disboard.Disboard`1.Run(System.String)">
+            <summary>
+            Disboard를 실행합니다. 실행을 블락하므로 프로그램의 마지막줄에 있어야 합니다.
+            </summary>
+            <param name="token">디스코드 홈페이지에서 토큰을 발급해야 합니다.</param>
+        </member>
+        <member name="T:Disboard.DisboardChannel">
+            <summary>
+            디스코드 채널입니다. 그룹 채널일 수도, DM 채널일 수도 있습니다.
+            </summary>
+        </member>
+        <member name="P:Disboard.DisboardChannel.Send">
+            <summary>
+            메시지를 전송합니다. Discord embed를 포함할 수도 있습니다.
+            </summary>
+        </member>
+        <member name="P:Disboard.DisboardChannel.SendImage">
+            <summary>
+            한 장의 이미지를 전송합니다. 메시지나, Discord embed를 포함할 수도 있습니다.
+            </summary>
+        </member>
+        <member name="P:Disboard.DisboardChannel.SendImages">
+            <summary>
+            여러 장의 이미지를 전송합니다. 메시지나, Discord embed를 포함할 수도 있습니다.
+            </summary>
+        </member>
+        <member name="P:Disboard.DisboardChannel.URL">
+            <summary>
+            이 채널의 URL입니다. 대화방에 전송하면 URL을 클릭했을 때 이 채널을 보게 됩니다. 
+            </summary>
+        </member>
+        <member name="M:Disboard.DisboardChannel.#ctor(DSharpPlus.Entities.DiscordChannel,System.Collections.Concurrent.ConcurrentQueue{System.Threading.Tasks.Task})">
+            <summary>
+            디스코드 채널입니다. 그룹 채널일 수도, DM 채널일 수도 있습니다.
+            </summary>
+            <param name="channel">그룹 채널일 수도, DM 채널일 수도 있습니다.</param>
+            <param name="messageQueue">메시지 큐에 태스크를 넣으면 메시지를 전송할 수 있습니다.</param>
+        </member>
+        <member name="T:Disboard.DisboardGame">
+            <summary>
+            이 클래스를 상속하여 게임을 구현합니다.
+            </summary>
+            <remarks>
+            생성자에서는 Send, OnFinish 등을 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
+            </remarks>
+        </member>
+        <member name="M:Disboard.DisboardGame.#ctor(Disboard.DisboardGameInitData)">
+            <summary>
+            그룹 채널의 BOT start, BOT restart 명령어에 의해 호출됩니다.
+            </summary>
+            <remarks>
+            생성자에서는 Send, OnFinish 등을 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
+            </remarks>
+            <param name="initData">게임 생성에 필요한 데이터입니다.</param>
+        </member>
+        <member name="P:Disboard.DisboardGame.Channel">
+            <summary>
+            게임이 생성된 그룹 채널입니다.
+            </summary>
+        </member>
+        <member name="P:Disboard.DisboardGame.Send">
+            <summary>
+            그룹 채널에 메시지를 전송합니다. Discord embed를 포함할 수 있습니다.
+            </summary>
+            <remarks>
+            생성자에서는 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
+            </remarks>
+        </member>
+        <member name="P:Disboard.DisboardGame.SendImage">
+            <summary>
+            그룹 채널에 한 장의 이미지를 전송합니다. 메시지나 Discord embed를 포함할 수 있습니다.
+            </summary>
+            <remarks>
+            생성자에서는 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
+            </remarks>
+        </member>
+        <member name="P:Disboard.DisboardGame.SendImages">
+            <summary>
+            그룹 채널에 여러 장의 이미지를 전송합니다. 메시지나 Discord embed를 포함할 수 있습니다.
+            </summary>
+            <remarks>
+            생성자에서는 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
+            </remarks>
+        </member>
+        <member name="P:Disboard.DisboardGame.GroupURL">
+            <summary>
+            이 채널의 URL입니다. 대화방에 전송하면 URL을 클릭했을 때 이 채널을 보게 됩니다. 
+            </summary>
+        </member>
+        <member name="P:Disboard.DisboardGame.OnFinish">
+            <summary>
+            게임이 종료되면 OnFinish를 호출해야 합니다.
+            </summary>
+            <remarks>
+            생성자에서는 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
+            </remarks>
+        </member>
+        <member name="P:Disboard.DisboardGame.InitialPlayers">
+            <summary>
+            게임에 참여하는 플레이어들입니다. 게임에 참가하는 인원은 게임 시작 후 변경할 수 없습니다. 순서는 임의로 결정됩니다.
+            </summary>
+        </member>
         <member name="P:Disboard.DisboardGame.Render">
             <summary>
             WPF 컨트롤을 사용하여 이미지를 그릴 수 있습니다. EchoVisual.cs를 예제로써 참고하세요.
             사용하려면 Main 함수 윗줄에 [System.STAThread()]를 추가해야 합니다.
             </summary>
+            <remarks>
+            생성자에서는 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
+            </remarks>
+        </member>
+        <member name="M:Disboard.DisboardGame.Start">
+            <summary>
+            게임이 시작될 때 한 번 호출됩니다. OnGroup과 OnTick은 반드시 OnStart 이후에 호출됩니다.
+            </summary>
+            <remarks>
+            생성자에서는 Send, OnFinish 등을 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
+            </remarks>
+        </member>
+        <member name="M:Disboard.DisboardGame.OnGroup(Disboard.DisboardPlayer,System.String)">
+            <summary>
+            그룹 채널에서 플레이어의 메시지가 작성되면 호출됩니다.
+            </summary>
+            <param name="author">메시지를 작성한 플레이어입니다. 반드시 게임에 참여하고 있습니다.</param>
+            <param name="message">플레이어가 작성한 메시지의 내용입니다.</param>
         </member>
         <member name="M:Disboard.DisboardGame.OnTick">
             <summary>
@@ -21,6 +177,35 @@
             Game은 파라미터가 GameInitializeData 1개인 public 생성자를 가져야 합니다.
             </summary>
             <typeparam name="GameType">파라미터가 GameInitializeData 1개인 public 생성자를 가진 Game입니다.</typeparam>
+        </member>
+        <member name="T:Disboard.DisboardGameInitData">
+            <summary>
+            게임의 초기화에 필요한 데이터들입니다.
+            </summary>
+        </member>
+        <member name="T:Disboard.DisboardGameUsingDM">
+            <summary>
+            게임이 플레이어의 DM을 받기를 원할 때 DisboardGame 대신 사용합니다.
+            </summary>
+            <remarks>
+            생성자에서는 Send, OnFinish 등을 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
+            </remarks>
+        </member>
+        <member name="M:Disboard.DisboardGameUsingDM.#ctor(Disboard.DisboardGameInitData)">
+            <summary>
+            그룹 채널의 BOT start, BOT restart 명령어에 의해 호출됩니다.
+            </summary>
+            <remarks>
+            생성자에서는 Send, OnFinish 등을 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
+            </remarks>
+            <param name="initData">게임 생성에 필요한 데이터입니다.</param>
+        </member>
+        <member name="M:Disboard.DisboardGameUsingDM.OnDM(Disboard.DisboardPlayer,System.String)">
+            <summary>
+            플레이어가 DM을 보내면 호출됩니다.
+            </summary>
+            <param name="author">DM을 작성한 플레이어입니다. 반드시 게임에 참여하고 있습니다.</param>
+            <param name="message">플레이어가 작성한 DM의 내용입니다.</param>
         </member>
         <member name="P:Disboard.DisboardPlayer.DM">
             <summary>
@@ -41,6 +226,58 @@
             <summary>
             플레이어의 DM 입력을 받으려면 IGameUsesDM을 사용해야 합니다. README를 참고하세요.
             </summary>
+        </member>
+        <member name="T:Disboard.IDisboardGameFactory">
+            <summary>
+            게임을 생성하고 도움말을 제공합니다. 기본적인 기능만을 갖고있는 DisboardGameFactory를 사용할 수도 있습니다.
+            </summary>
+        </member>
+        <member name="M:Disboard.IDisboardGameFactory.New(Disboard.DisboardGameInitData)">
+            <summary>
+            게임을 생성합니다. 그룹 채널에서 BOT start, BOT restart를 입력할 때 실행됩니다.
+            </summary>
+            <param name="initData">게임 생성에 필요한 기본적인 데이터입니다.</param>
+            <returns>생성된 게임을 반환해야 합니다.</returns>
+        </member>
+        <member name="M:Disboard.IDisboardGameFactory.OnHelp(Disboard.DisboardChannel)">
+            <summary>
+            도움말을 제공합니다. 그룹 채널에서 BOT help를 입력할 때 실행됩니다.
+            </summary>
+            <param name="channel">채널에 메시지를 전송할 수 있습니다.</param>
+        </member>
+        <member name="T:Disboard.LinqExtension">
+            <summary>
+            Linq에서 지원하지 않는 명령어들이 포함되어 있습니다.
+            </summary>
+        </member>
+        <member name="M:Disboard.LinqExtension.Enumerate``1(System.Collections.Generic.IEnumerable{``0})">
+            <summary>
+            python의 enumerate에 대응합니다. 목록에 인덱스를 붙여줍니다.
+            </summary>
+            <typeparam name="TSource">The type of the elements of source.</typeparam>
+            <param name="source">A sequence of values to invoke a transform function on.</param>
+            <returns>(index, element)의 나열을 반환합니다.</returns>
+        </member>
+        <member name="M:Disboard.LinqExtension.FindIndex``1(System.Collections.Generic.IEnumerable{``0},System.Func{``0,System.Boolean})">
+            <summary>
+            목록에서 조건에 맞는 대상을 찾아 인덱스를 반환합니다.
+            </summary>
+            <typeparam name="TSource">The type of the elements of source.</typeparam>
+            <param name="source">An System.Collections.Generic.IEnumerable`1 to return an element from.</param>
+            <param name="predicate">A function to test each element for a condition.</param>
+            <returns>찾은 결과를 반환합니다. 결과가 없으면 null을 반환합니다.</returns>
+        </member>
+        <member name="T:Disboard.Macro">
+            <summary>
+            간단하고 유용한 매크로 모음입니다.
+            </summary>
+        </member>
+        <member name="M:Disboard.Macro.Brush(System.String)">
+            <summary>
+            색상 문자열을 WPF 컨트롤에 사용할 수 있는 브러쉬로 만듭니다.
+            </summary>
+            <param name="html"></param>
+            <returns></returns>
         </member>
         <member name="M:Disboard.Macro.R(System.String)">
             <summary>
