@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 
 namespace Disboard
 {
@@ -28,8 +29,9 @@ namespace Disboard
 
         IDisboardGameFactory GameFactory { get; } = new GameFactoryType();
         Application Application { get; } = new Application();
-        Dictionary<ChannelIdType, DisboardGame> Games { get; } = new Dictionary<ChannelIdType, DisboardGame>();
+        ConcurrentDictionary<ChannelIdType, IDisboardGame> Games { get; } = new ConcurrentDictionary<ChannelIdType, IDisboardGame>();
         Dictionary<UserIdType, IDisboardGameUsesDM> GamesByUsers { get; } = new Dictionary<UserIdType, IDisboardGameUsesDM>();
+        DispatcherTimer? TickTimer { get; set; } = null;
 
         public void Run(string token)
         {
@@ -90,17 +92,12 @@ namespace Disboard
                     GamesByUsers.TryAdd(player.Id, gameUsesDM!);
                 }
             }
-            Games.TryAdd(channel.Id, game);
-            try
+
+            await RunInLockAndProcessMessage(game, () =>
             {
                 game.Start();
-                foreach (var messageTask in messageQueue)
-                    await messageTask;
-            }
-            catch (Exception e)
-            {
-                Log(e.ToString());
-            }
+                Games.TryAdd(channel.Id, game);
+            }, notNeedToEnsureGameIsValid: false);
         }
         void OnFinish(ChannelIdType channelId)
         {
@@ -140,10 +137,33 @@ namespace Disboard
                 IsInitialized = true;
             };
 
-            var task = OnReady().ConfigureAwait(true);
-            Task.Run(() => task.GetAwaiter().GetResult());
+            Task.Run(() => OnReady().GetAwaiter().GetResult());
+
+            if (TickTimer != null && TickTimer.IsEnabled)
+            {
+                TickTimer.Tick -= Tick;
+                TickTimer.Stop();
+            }
+            TickTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Dispatcher);
+            TickTimer.Interval = TimeSpan.FromSeconds(0.1);
+            TickTimer.Tick += Tick;
+            TickTimer.Start();
 
             return Task.CompletedTask;
+        }
+        void Tick(object? sender, EventArgs e)
+        {
+            var task = Tick();
+            if (false == task.IsCompleted)
+            {
+                task.GetAwaiter().GetResult();
+            }
+        }
+
+        async Task Tick()
+        {
+            foreach (var game in Games.Values)
+                await RunInLockAndProcessMessage(game, () => game.OnTick()).ConfigureAwait(false);
         }
 
         Task GuildMemberAdded(GuildMemberAddEventArgs _)
@@ -177,6 +197,26 @@ namespace Disboard
 
         Task PrintDesc(DiscordChannel channel)
             => channel.SendMessageAsync("`BOT start @참가인원1 @참가인원2... 로 게임을 시작할 수 있습니다.`");
+
+        async Task RunInLockAndProcessMessage(IDisboardGame game, Action task, bool notNeedToEnsureGameIsValid = true)
+        {
+            using (await game.Semaphore.LockAsync().ConfigureAwait(false))
+            {
+                if (notNeedToEnsureGameIsValid == false || Games.Values.ToList().Contains(game))
+                {
+                    try
+                    {
+                        task();
+                        while (game.MessageQueue.TryDequeue(out var messageTask))
+                            await messageTask;
+                    }
+                    catch (Exception e)
+                    {
+                        Log(e.ToString());
+                    }
+                }
+            }
+        }
 
         async Task MessageCreated(MessageCreateEventArgs __)
         {
@@ -221,16 +261,7 @@ namespace Disboard
                             }
                         }
 
-                        try
-                        {
-                            game.OnDM(player, content);
-                            foreach (var messageTask in game.MessageQueue)
-                                await messageTask;
-                        }
-                        catch (Exception e)
-                        {
-                            Log(e.ToString());
-                        }
+                        await RunInLockAndProcessMessage(game, () => game.OnDM(player, content));
                     }
                 }
                 else
@@ -297,11 +328,12 @@ namespace Disboard
                                 await channel.SendMessageAsync("`BOT restart @참가인원1 @참가인원2... 로 게임을 시작합니다.`");
                             }
                         }
+
                         try
                         {
                             var messageQueue = new ConcurrentQueue<Task>();
                             GameFactory.OnHelp(new DisboardChannel(channel, messageQueue));
-                            foreach (var messageTask in messageQueue)
+                            while (messageQueue.TryDequeue(out var messageTask))
                                 await messageTask;
                         }
                         catch (Exception e)
@@ -368,12 +400,9 @@ namespace Disboard
                                     return;
                                 }
                             }
-
                             try
                             {
-                                game.OnGroup(player, content);
-                                foreach (var messageTask in game.MessageQueue)
-                                    await messageTask;
+                                await RunInLockAndProcessMessage(game, () => game.OnGroup(player, content));
                             }
                             catch (Exception e)
                             {

@@ -21,6 +21,8 @@ namespace Disboard
         internal bool IsDebug { get; }
         ConcurrentQueue<Task> IDisboardGame.MessageQueue => MessageQueue;
         internal ConcurrentQueue<Task> MessageQueue { get; }
+        Semaphore IDisboardGame.Semaphore => Semaphore;
+        internal Semaphore Semaphore { get; } = new Semaphore();
 
         public DisboardChannel Channel { get; }
         public SendType Send => Channel.Send;
@@ -37,5 +39,9 @@ namespace Disboard
 
         public abstract void Start();
         public abstract void OnGroup(DisboardPlayer author, string message);
+        /// <summary>
+        /// 매 0.1초마다 호출됩니다. 호출 간격은 정확하지 않습니다.
+        /// </summary>
+        public virtual void OnTick() { }
     }
 }
