@@ -29,8 +29,8 @@ namespace Disboard
 
         IDisboardGameFactory GameFactory { get; } = new GameFactoryType();
         Application Application { get; } = new Application();
-        ConcurrentDictionary<ChannelIdType, IDisboardGame> Games { get; } = new ConcurrentDictionary<ChannelIdType, IDisboardGame>();
-        Dictionary<UserIdType, IDisboardGameUsesDM> GamesByUsers { get; } = new Dictionary<UserIdType, IDisboardGameUsesDM>();
+        ConcurrentDictionary<ChannelIdType, DisboardGame> Games { get; } = new ConcurrentDictionary<ChannelIdType, DisboardGame>();
+        Dictionary<UserIdType, DisboardGameUsingDM> GamesByUsers { get; } = new Dictionary<UserIdType, DisboardGameUsingDM>();
         DispatcherTimer? TickTimer { get; set; } = null;
 
         public void Run(string token)
@@ -79,9 +79,9 @@ namespace Disboard
             DisboardGame game = GameFactory.New(gameInitializeData);
 
             OnFinish(channel.Id);
-            if (game is IDisboardGameUsesDM)
+            if (game is DisboardGameUsingDM)
             {
-                var gameUsesDM = game as IDisboardGameUsesDM;
+                var gameUsesDM = game as DisboardGameUsingDM;
                 foreach (var player in players)
                 {
                     if (GamesByUsers.TryGetValue(player.Id, out var existingGame) && existingGame != game)
@@ -198,7 +198,7 @@ namespace Disboard
         Task PrintDesc(DiscordChannel channel)
             => channel.SendMessageAsync("`BOT start @참가인원1 @참가인원2... 로 게임을 시작할 수 있습니다.`");
 
-        async Task RunInLockAndProcessMessage(IDisboardGame game, Action task, bool notNeedToEnsureGameIsValid = true)
+        async Task RunInLockAndProcessMessage(DisboardGame game, Action task, bool notNeedToEnsureGameIsValid = true)
         {
             using (await game.Semaphore.LockAsync().ConfigureAwait(false))
             {
@@ -241,7 +241,7 @@ namespace Disboard
             if (channel.Type == ChannelType.Private)
             {
                 var game = GamesByUsers.GetValueOrDefault(authorId);
-                if (game is IDisboardGameUsesDM)
+                if (game is DisboardGameUsingDM)
                 {
                     var player = game.InitialPlayers.Where(_ => _.Id == authorId).FirstOrDefault();
                     if (player != null)
@@ -347,7 +347,7 @@ namespace Disboard
                         {
                             await channel.SendMessageAsync("`진행중인 게임이 없습니다. BOT start @참가인원1 @참가인원2...는 어떨까요?`");
                         }
-                        else if (false == game is IDisboardGameUsesDM)
+                        else if (false == game is DisboardGameUsingDM)
                         {
                             await channel.SendMessageAsync("`DM을 사용하지 않는 게임입니다.`");
                         }
@@ -360,7 +360,7 @@ namespace Disboard
                             }
                             else
                             {
-                                var gameUsesDM = game as IDisboardGameUsesDM;
+                                var gameUsesDM = game as DisboardGameUsingDM;
                                 var member = await guild.GetMemberAsync(authorId);
                                 var dMChannel = await member.CreateDmChannelAsync();
                                 if (GamesByUsers.GetValueOrDefault(authorId) == game)

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Disboard
 {
-    public abstract class DisboardGame : IDisboardGame
+    public abstract class DisboardGame
     {
         public DisboardGame(DisboardGameInitData initData)
         {
@@ -17,11 +17,8 @@ namespace Disboard
             Render = controlConstructor => initData.Dispatcher.Invoke(() => controlConstructor().Render());
         }
 
-        bool IDisboardGame.IsDebug => IsDebug;
         internal bool IsDebug { get; }
-        ConcurrentQueue<Task> IDisboardGame.MessageQueue => MessageQueue;
         internal ConcurrentQueue<Task> MessageQueue { get; }
-        Semaphore IDisboardGame.Semaphore => Semaphore;
         internal Semaphore Semaphore { get; } = new Semaphore();
 
         public DisboardChannel Channel { get; }
