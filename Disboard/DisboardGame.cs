@@ -71,7 +71,7 @@ namespace Disboard
         /// </remarks>
         public Action OnFinish { get; }
         /// <summary>
-        /// 게임에 참여하는 플레이어들입니다. 게임에 참가하는 인원은 게임 시작 후 변경할 수 없습니다. 순서는 임의로 결정됩니다.
+        /// 게임에 참여하는 플레이어들입니다. 게임에 참가하는 인원은 변경할 수 없습니다. 순서는 임의로 결정됩니다.
         /// </summary>
         public IReadOnlyList<DisboardPlayer> InitialPlayers { get; }
         /// <summary>

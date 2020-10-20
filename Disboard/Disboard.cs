@@ -76,11 +76,28 @@ namespace Disboard
             discord.GuildDeleted += GuildDeleted;
             discord.GuildMemberAdded += GuildMemberAdded;
             discord.MessageCreated += MessageCreated;
+            discord.GuildMemberUpdated += GuildMemberUpdated;
+            discord.UserUpdated += UserUpdated;
 
             Task.Run(() => discord.ConnectAsync().GetAwaiter().GetResult());
             Application.Run();
         }
 
+        Task GuildMemberUpdated(GuildMemberUpdateEventArgs args)
+        {
+            var players = Games.Values.SelectMany(_ => _.InitialPlayers.Where(_ => _.Id == args.Member.Id));
+            foreach (var player in players)
+                player.Nickname = args.NicknameAfter;
+            return Task.CompletedTask;
+        }
+
+        Task UserUpdated(UserUpdateEventArgs args)
+        {
+            var players = Games.Values.SelectMany(_ => _.InitialPlayers.Where(_ => _.Id == args.UserBefore.Id));
+            foreach (var player in players)
+                player.Name = args.UserAfter.Username;
+            return Task.CompletedTask;
+        }
         async Task NewDebugGame(DiscordChannel discordChannel, int mockPlayerCount)
         {
             var messageQueue = new ConcurrentQueue<Task>();
