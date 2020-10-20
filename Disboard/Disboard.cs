@@ -84,7 +84,7 @@ namespace Disboard
         async Task NewDebugGame(DiscordChannel discordChannel, int mockPlayerCount)
         {
             var messageQueue = new ConcurrentQueue<Task>();
-            var channel = new DisboardChannel(discordChannel, new ConcurrentQueue<Task>());
+            var channel = new DisboardChannel(discordChannel, new ConcurrentQueue<Task>(), Application.Dispatcher);
             var mockPlayers = Enumerable.Range(0, mockPlayerCount).Select(_ => new MockPlayer(_, discordChannel.Guild.Owner, channel) as DisboardPlayer).ToList();
             await NewGame_(discordChannel, mockPlayers, messageQueue, isDebug: true);
         }
@@ -100,7 +100,7 @@ namespace Disboard
             var members = channel.Guild.Members.Where(_ => userIds.Contains(_.Id));
             var dMChannels = await Task.WhenAll(members.Select(_ => _.CreateDmChannelAsync()));
             var messageQueue = new ConcurrentQueue<Task>();
-            var players = members.Zip(dMChannels).Select(_ => new RealPlayer(_.First, _.Second, messageQueue) as DisboardPlayer).OrderBy(_ => random.Next()).ToList();
+            var players = members.Zip(dMChannels).Select(_ => new RealPlayer(_.First, new DisboardChannel(_.Second, messageQueue, Application.Dispatcher)) as DisboardPlayer).OrderBy(_ => random.Next()).ToList();
             await NewGame_(channel, players, messageQueue);
         }
         async Task NewGame_(DiscordChannel channel, List<DisboardPlayer> players, ConcurrentQueue<Task> messageQueue, bool isDebug = false)
@@ -362,7 +362,7 @@ namespace Disboard
                         try
                         {
                             var messageQueue = new ConcurrentQueue<Task>();
-                            GameFactory.OnHelp(new DisboardChannel(channel, messageQueue));
+                            GameFactory.OnHelp(new DisboardChannel(channel, messageQueue, Application.Dispatcher));
                             while (messageQueue.TryDequeue(out var messageTask))
                                 await messageTask;
                         }

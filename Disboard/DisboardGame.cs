@@ -23,11 +23,11 @@ namespace Disboard
         public DisboardGame(DisboardGameInitData initData)
         {
             IsDebug = initData.IsDebug;
-            Channel = new DisboardChannel(initData.Channel, initData.MessageQueue);
+            Channel = new DisboardChannel(initData.Channel, initData.MessageQueue, initData.Dispatcher);
             InitialPlayers = initData.Players;
             OnFinish = () => initData.OnFinish(initData.Channel.Id);
             MessageQueue = initData.MessageQueue;
-            Render = controlConstructor => initData.Dispatcher.Invoke(() => controlConstructor().Render());
+            Render = Channel.Render;
         }
 
         internal bool IsDebug { get; }
