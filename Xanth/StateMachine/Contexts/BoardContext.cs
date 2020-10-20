@@ -31,7 +31,7 @@ namespace Xanth
             else
             {
                 BoardSize = 5;
-                markers = new[] { new Marker(0, 0, BoardSize), new Marker(0, 4, BoardSize), new Marker(4, 4, BoardSize), new Marker(4, 0, BoardSize) };
+                markers = new[] { new Marker(4, 1, BoardSize), new Marker(3, 4, BoardSize), new Marker(0, 3, BoardSize), new Marker(0, 1, BoardSize) };
             }
 
             PlayerDict = players.Enumerate().ToDictionary(_ => _.elem, _ => new Player(players, _.elem, markers[_.index]));
@@ -52,7 +52,7 @@ namespace Xanth
             int len = initials.Length;
             for (int i = 0; i < len; i++)
             {
-                if (currentPlayer.NotMovedYet && i == 0)
+                if (currentPlayer.RemainFirstMoveBonus && i == 0)
                 {
                     if (initials[0] == '!')
                         continue;
@@ -103,7 +103,7 @@ namespace Xanth
                 slot.Write(currentPlayer, rank);
             }
             currentPlayer.Marker = marker;
-            currentPlayer.NotMovedYet = false;
+            currentPlayer.RemainFirstMoveBonus = false;
         }
 
         public Disgrid.Disgrid GetBoardGrid((int playerIndex, Dictionary<Slot, Slot.Permission> reachables)? CurrentState)
@@ -210,7 +210,7 @@ namespace Xanth
             }
 
             // 이동이 처음이면 자기 자리도 칠할 수 있지만, 갇힌 상태라면 아님
-            if (player.NotMovedYet && reachables.Count > 0)
+            if (player.RemainFirstMoveBonus && reachables.Count > 0)
                 overwritables.Add((player.Marker.Row, player.Marker.Column));
 
             var result = reachables.ToDictionary(_ => Board.Slots[_.Item1][_.Item2], _ => Slot.Permission.Reachable);
