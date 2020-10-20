@@ -36,6 +36,7 @@ class Program
 - 표를 간단히 그려주는 라이브러리 __Disgrid__
 - 2개의 단순한 예제: __Echo__, __EchoVisual__
 - 3개의 간단한 게임: __Vechu__, __Xanth__, __Yacht__
+- 미리 생성된 프로젝트: __MyGame__ 을 수정해서 게임을 만들어보세요.
 
 <hr/>
 
