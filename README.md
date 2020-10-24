@@ -31,7 +31,7 @@ class Program
 <hr/>
 
 레포지토리는 다음을 포함하고 있습니다.
-- 온라인 보드게임 프레임워크 __Disboard__
+- 온라인 보드게임 플랫폼 __Disboard__
 - 표를 간단히 그려주는 라이브러리 __Disgrid__
 - 2개의 단순한 예제: __Echo__, __EchoVisual__
 - 3개의 간단한 게임: __Vechu__, __Xanth__, __Yacht__
