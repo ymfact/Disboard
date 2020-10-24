@@ -6,9 +6,7 @@ namespace Yacht
     {
         IGameState State { get; set; } = NullState.New;
 
-        public Yacht(DisboardGameInitData initData) : base(initData) { }
-
-        public override void Start()
+        public Yacht(DisboardGameInitData initData) : base(initData)
             => State = TurnState.New(this, InitialPlayers);
 
         public override void OnGroup(DisboardPlayer player, string message)

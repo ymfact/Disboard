@@ -125,6 +125,9 @@ namespace Disboard
             var gameInitializeData = new DisboardGameInitData(isDebug, channel, players, OnFinish, Application.Dispatcher, messageQueue);
             DisboardGame game = GameFactory.New(gameInitializeData);
 
+            if (game.IsFinished)
+                return;
+
             OnFinish(channel.Id);
             if (game is DisboardGameUsingDM)
             {
@@ -142,9 +145,8 @@ namespace Disboard
 
             await RunInLockAndProcessMessage(game, () =>
             {
-                game.Start();
                 Games.TryAdd(channel.Id, game);
-            }, notNeedToEnsureGameIsValid: false);
+            }, gameIsInGameList: false);
         }
         void OnFinish(ChannelIdType channelId)
         {
@@ -191,8 +193,10 @@ namespace Disboard
                 TickTimer.Tick -= Tick;
                 TickTimer.Stop();
             }
-            TickTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Dispatcher);
-            TickTimer.Interval = TimeSpan.FromSeconds(0.1);
+            TickTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Dispatcher)
+            {
+                Interval = TimeSpan.FromSeconds(0.1),
+            };
             TickTimer.Tick += Tick;
             TickTimer.Start();
 
@@ -245,11 +249,11 @@ namespace Disboard
         Task PrintDesc(DiscordChannel channel)
             => channel.SendMessageAsync("`BOT start @참가인원1 @참가인원2... 로 게임을 시작할 수 있습니다.`");
 
-        async Task RunInLockAndProcessMessage(DisboardGame game, Action task, bool notNeedToEnsureGameIsValid = true)
+        async Task RunInLockAndProcessMessage(DisboardGame game, Action task, bool gameIsInGameList = true)
         {
             using (await game.Semaphore.LockAsync().ConfigureAwait(false))
             {
-                if (notNeedToEnsureGameIsValid == false || Games.Values.ToList().Contains(game))
+                if (gameIsInGameList == false || Games.Values.ToList().Contains(game))
                 {
                     try
                     {

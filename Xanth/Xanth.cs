@@ -6,9 +6,7 @@ namespace Xanth
     {
         IGameState State { get; set; } = NullState.New;
 
-        public Xanth(DisboardGameInitData initData) : base(initData) { }
-
-        public override void Start()
+        public Xanth(DisboardGameInitData initData) : base(initData)
         {
             if (InitialPlayers.Count == 2 || InitialPlayers.Count == 4)
             {

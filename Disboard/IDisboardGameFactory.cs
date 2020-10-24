@@ -1,7 +1,9 @@
 ﻿namespace Disboard
 {
     /// <summary>
-    /// 게임을 생성하고 도움말을 제공합니다. 기본적인 기능만을 갖고있는 DisboardGameFactory를 사용할 수도 있습니다.
+    /// 게임을 생성하고 도움말을 제공합니다.
+    /// 파라미터가 없는 public 생성자가 있어야 합니다.
+    /// 기본적인 기능만을 갖고있는 DisboardGameFactory를 사용할 수도 있습니다.
     /// </summary>
     public interface IDisboardGameFactory
     {

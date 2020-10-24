@@ -89,17 +89,11 @@
             <summary>
             이 클래스를 상속하여 게임을 구현합니다.
             </summary>
-            <remarks>
-            생성자에서는 Send, OnFinish 등을 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
-            </remarks>
         </member>
         <member name="M:Disboard.DisboardGame.#ctor(Disboard.DisboardGameInitData)">
             <summary>
             그룹 채널의 BOT start, BOT restart 명령어에 의해 호출됩니다.
             </summary>
-            <remarks>
-            생성자에서는 Send, OnFinish 등을 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
-            </remarks>
             <param name="initData">게임 생성에 필요한 데이터입니다.</param>
         </member>
         <member name="P:Disboard.DisboardGame.Channel">
@@ -111,25 +105,16 @@
             <summary>
             그룹 채널에 메시지를 전송합니다. Discord embed를 포함할 수 있습니다.
             </summary>
-            <remarks>
-            생성자에서는 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
-            </remarks>
         </member>
         <member name="P:Disboard.DisboardGame.SendImage">
             <summary>
             그룹 채널에 한 장의 이미지를 전송합니다. 메시지나 Discord embed를 포함할 수 있습니다.
             </summary>
-            <remarks>
-            생성자에서는 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
-            </remarks>
         </member>
         <member name="P:Disboard.DisboardGame.SendImages">
             <summary>
             그룹 채널에 여러 장의 이미지를 전송합니다. 메시지나 Discord embed를 포함할 수 있습니다.
             </summary>
-            <remarks>
-            생성자에서는 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
-            </remarks>
         </member>
         <member name="P:Disboard.DisboardGame.GroupURL">
             <summary>
@@ -140,9 +125,6 @@
             <summary>
             게임이 종료되면 OnFinish를 호출해야 합니다.
             </summary>
-            <remarks>
-            생성자에서는 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
-            </remarks>
         </member>
         <member name="P:Disboard.DisboardGame.InitialPlayers">
             <summary>
@@ -154,17 +136,6 @@
             WPF 컨트롤을 사용하여 이미지를 그릴 수 있습니다. EchoVisual.cs를 예제로써 참고하세요.
             사용하려면 Main 함수 윗줄에 [System.STAThread()]를 추가해야 합니다.
             </summary>
-            <remarks>
-            생성자에서는 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
-            </remarks>
-        </member>
-        <member name="M:Disboard.DisboardGame.Start">
-            <summary>
-            게임이 시작될 때 한 번 호출됩니다. OnGroup과 OnTick은 반드시 OnStart 이후에 호출됩니다.
-            </summary>
-            <remarks>
-            생성자에서는 Send, OnFinish 등을 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
-            </remarks>
         </member>
         <member name="M:Disboard.DisboardGame.OnGroup(Disboard.DisboardPlayer,System.String)">
             <summary>
@@ -194,17 +165,11 @@
             <summary>
             게임이 플레이어의 DM을 받기를 원할 때 DisboardGame 대신 사용합니다.
             </summary>
-            <remarks>
-            생성자에서는 Send, OnFinish 등을 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
-            </remarks>
         </member>
         <member name="M:Disboard.DisboardGameUsingDM.#ctor(Disboard.DisboardGameInitData)">
             <summary>
             그룹 채널의 BOT start, BOT restart 명령어에 의해 호출됩니다.
             </summary>
-            <remarks>
-            생성자에서는 Send, OnFinish 등을 호출하지 않아야 합니다. 대신 OnStart를 사용하세요.
-            </remarks>
             <param name="initData">게임 생성에 필요한 데이터입니다.</param>
         </member>
         <member name="M:Disboard.DisboardGameUsingDM.OnDM(Disboard.DisboardPlayer,System.String)">
@@ -276,7 +241,9 @@
         </member>
         <member name="T:Disboard.IDisboardGameFactory">
             <summary>
-            게임을 생성하고 도움말을 제공합니다. 기본적인 기능만을 갖고있는 DisboardGameFactory를 사용할 수도 있습니다.
+            게임을 생성하고 도움말을 제공합니다.
+            파라미터가 없는 public 생성자가 있어야 합니다.
+            기본적인 기능만을 갖고있는 DisboardGameFactory를 사용할 수도 있습니다.
             </summary>
         </member>
         <member name="M:Disboard.IDisboardGameFactory.New(Disboard.DisboardGameInitData)">

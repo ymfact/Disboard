@@ -6,9 +6,7 @@ namespace Vechu
     {
         IGameState State { get; set; } = NullState.New;
 
-        public Vechu(DisboardGameInitData initData) : base(initData) { }
-
-        public override void Start()
+        public Vechu(DisboardGameInitData initData) : base(initData)
             => State = TurnState.New(this, InitialPlayers);
 
         public override void OnGroup(DisboardPlayer player, string message)

@@ -6,8 +6,7 @@ namespace EchoVisual
 {
     class EchoVisual : DisboardGame
     {
-        public EchoVisual(DisboardGameInitData initData) : base(initData) { }
-        public override void Start()
+        public EchoVisual(DisboardGameInitData initData) : base(initData)
         {
             var image = Render(() => new Label { Foreground = Brushes.White, Content = "EchoVisual started." });
             SendImage(image);
