@@ -129,12 +129,9 @@ namespace Vechu
             }
             else
             {
-                return StartTurn(nextPlayer);
+                return StartTurn(ctx, Board, Turn.Next());
             }
         }
-
-        TurnState StartTurn(DisboardPlayer nextPlayer)
-            => StartTurn(ctx, Board, Turn.Next(nextPlayer));
 
         static TurnState StartTurn(DisboardGame ctx, BoardContext board, TurnContext turn)
         {

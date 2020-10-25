@@ -126,12 +126,9 @@ namespace Yacht
             }
             else
             {
-                return StartTurn(Turn.CurrentPlayer.NextPlayer);
+                return StartTurn(ctx, Board, Turn.Next());
             }
         }
-
-        TurnState StartTurn(DisboardPlayer nextPlayer)
-            => StartTurn(ctx, Board, Turn.Next(nextPlayer));
 
         static TurnState StartTurn(DisboardGame ctx, BoardContext board, TurnContext turn)
         {

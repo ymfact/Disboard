@@ -151,21 +151,16 @@ namespace Xanth
                 if (Turn.IsStuckInThisTurn)
                     Board.Drop(Turn.CurrentPlayer);
 
-                Player nextPlayer = Board.PlayerDict[Turn.CurrentPlayer.Disboard.NextPlayer];
-
-                while (nextPlayer.IsDropped)
-                    nextPlayer = Board.PlayerDict[nextPlayer.Disboard.NextPlayer];
-
                 if (Board.Players.Where(_ => _.IsDropped == false).Count() == 1)
                 {
-                    return Finish(new[] { nextPlayer });
+                    return Finish(new[] { Turn.CurrentPlayer.GetNextPlayer(Board) });
                 }
                 else
                 {
                     return StartTurn(
                         ctx: ctx,
                         board: Board,
-                        turn: Turn.Next(Board, nextPlayer)
+                        turn: Turn.Next(Board)
                         );
                 }
             }

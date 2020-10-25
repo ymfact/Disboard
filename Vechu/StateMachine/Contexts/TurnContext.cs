@@ -31,9 +31,9 @@ namespace Vechu
                 nextPlayer: firstPlayer
                 );
 
-        public TurnContext Next(DisboardPlayer nextPlayer)
+        public TurnContext Next()
             => Next_(
-                nextPlayer
+                nextPlayer: CurrentPlayer.NextPlayer
                 );
 
         static TurnContext Next_(DisboardPlayer nextPlayer)

@@ -27,8 +27,8 @@ namespace Yacht
                 nextPlayer: firstPlayer
                 );
 
-        public TurnContext Next(DisboardPlayer nextPlayer)
-            => Next_(nextPlayer);
+        public TurnContext Next()
+            => Next_(CurrentPlayer.NextPlayer);
 
         static TurnContext Next_(DisboardPlayer nextPlayer)
             => new TurnContext(

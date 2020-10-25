@@ -38,10 +38,10 @@ namespace Xanth
                 nextPlayer: board.PlayerDict.First().Value
                 );
 
-        public TurnContext Next(BoardContext board, Player nextPlayer)
+        public TurnContext Next(BoardContext board)
             => Next_(
                 board: board,
-                nextPlayer: nextPlayer
+                nextPlayer: CurrentPlayer.GetNextPlayer(board)
                 );
 
         static TurnContext Next_(BoardContext board, Player nextPlayer)

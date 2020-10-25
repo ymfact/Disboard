@@ -29,5 +29,15 @@ namespace Xanth
         static readonly IReadOnlyList<string> DarkColorsForTwo = new[] { "#01326B", "#6B0900" };
         static readonly IReadOnlyList<string> ColorsForFour = new[] { "#C21200", "#C2A813", "#13C264", "#190AC2" };
         static readonly IReadOnlyList<string> DarkColorsForFour = new[] { "#6B0A00", "#6B5D0B", "#0B6B37", "#0E056B" };
+
+        public Player GetNextPlayer(BoardContext board)
+        {
+            Player nextPlayer = board.PlayerDict[Disboard.NextPlayer];
+
+            while (nextPlayer.IsDropped)
+                nextPlayer = board.PlayerDict[nextPlayer.Disboard.NextPlayer];
+
+            return nextPlayer;
+        }
     }
 }
