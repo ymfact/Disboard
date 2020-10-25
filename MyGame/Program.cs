@@ -10,7 +10,7 @@ class Program
     }
 }
 
-/* https://discordpy.readthedocs.io/en/latest/discord.htm
+/* https://discordpy.readthedocs.io/en/latest/discord.html
  * 위 페이지를 따라 토큰을 발급받은 뒤,
  * 아래 내용과 같은 Token.cs를 생성하세요.
 
