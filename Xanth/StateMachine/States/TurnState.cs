@@ -32,11 +32,9 @@ namespace Xanth
             Turn = turn;
         }
 
-        public Player CurrentPlayer => Board.Players[Turn.PlayerIndex];
-
         public override IGameState OnGroup(Disboard.DisboardPlayer player, string message)
         {
-            if (player == CurrentPlayer.Disboard)
+            if (player == Turn.CurrentPlayer.Disboard)
             {
                 var split = message.Split();
                 if (split.Length > 0 && split[0].ToLower() == "r")
@@ -113,7 +111,7 @@ namespace Xanth
             }
             try
             {
-                Board.Submit(CurrentPlayer, initials, Turn.Dices);
+                Board.Submit(Turn.CurrentPlayer, initials, Turn.Dices);
                 return ProceedAndStartTurn();
             }
             catch (MoveAfterGameEndException)
@@ -151,28 +149,23 @@ namespace Xanth
             else
             {
                 if (Turn.IsStuckInThisTurn)
-                    Board.Drop(Turn.PlayerIndex);
+                    Board.Drop(Turn.CurrentPlayer);
 
-                int nextPlayerIndex = Turn.PlayerIndex + 1;
-                if (nextPlayerIndex >= Board.Players.Count)
-                    nextPlayerIndex = 0;
-                while (Board.Players[nextPlayerIndex].IsDropped)
-                {
-                    nextPlayerIndex += 1;
-                    if (nextPlayerIndex >= Board.Players.Count)
-                        nextPlayerIndex = 0;
-                }
+                Player nextPlayer = Board.PlayerDict[Turn.CurrentPlayer.Disboard.NextPlayer];
+
+                while (nextPlayer.IsDropped)
+                    nextPlayer = Board.PlayerDict[nextPlayer.Disboard.NextPlayer];
 
                 if (Board.Players.Where(_ => _.IsDropped == false).Count() == 1)
                 {
-                    return Finish(new[] { Board.Players[nextPlayerIndex] });
+                    return Finish(new[] { nextPlayer });
                 }
                 else
                 {
                     return StartTurn(
                         ctx: ctx,
                         board: Board,
-                        turn: Turn.Next(Board, nextPlayerIndex)
+                        turn: Turn.Next(Board, nextPlayer)
                         );
                 }
             }
@@ -208,7 +201,7 @@ namespace Xanth
 
         void PrintTurn()
         {
-            var image = ctx.Render(() => Board.GetBoardGrid((Turn.PlayerIndex, Board.GetReachables(CurrentPlayer, Turn.Dices, Turn.RemainMove))));
+            var image = ctx.Render(() => Board.GetBoardGrid((Turn.CurrentPlayer, Board.GetReachables(Turn.CurrentPlayer, Turn.Dices, Turn.RemainMove))));
 
             var rank = Rank.Calculate(Turn.Dices);
             var rerollTexts = Enumerable.Range(0, Turn.RemainReroll).Select(_ => ":arrows_counterclockwise:");
@@ -220,9 +213,8 @@ namespace Xanth
             var diceTexts = Turn.Dices.Select(_ => diceTextTemplates[_]);
             var diceString = string.Join(" ", diceTexts);
 
-            var brushes = Board.Players.Count == 2 ? new[] { "#005AC2", "#C21000" } : new[] { "#C21200", "#C2A813", "#13C264", "#190AC2" };
             var embed = new DiscordEmbedBuilder()
-                    .WithColor(new DiscordColor(brushes[Turn.PlayerIndex]))
+                    .WithColor(new DiscordColor(Turn.CurrentPlayer.Color))
                     .AddField($"{rank.Initial} `{rank.Name}`", diceString, inline: true);
             if (Turn.RemainReroll > 0)
                 embed.AddField("Reroll", rerollString, inline: true);
@@ -230,7 +222,7 @@ namespace Xanth
                 embed.AddField("Stuck!", "이대로 턴 종료시 패배합니다.", inline: true);
             else
                 embed.AddField("Move", moveString, inline: true);
-            ctx.SendImage(image, $"{CurrentPlayer.Disboard.Mention} {CurrentPlayer.Disboard.Name}'s turn", embed);
+            ctx.SendImage(image, $"{Turn.CurrentPlayer.Disboard.Mention} {Turn.CurrentPlayer.Disboard.Name}'s turn", embed);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Disboard;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,13 +7,13 @@ namespace Yacht
 {
     class TurnContext
     {
-        public int CurrentPlayerIndex { get; }
+        public DisboardPlayer CurrentPlayer { get; }
         public int[] CurrentDices { get; }
         public int CurrentRemainReroll { get; }
 
-        TurnContext(int currentPlayerIndex, int[] currentDices, int currentRemainReroll)
+        TurnContext(DisboardPlayer currentPlayer, int[] currentDices, int currentRemainReroll)
         {
-            CurrentPlayerIndex = currentPlayerIndex;
+            CurrentPlayer = currentPlayer;
             CurrentDices = currentDices;
             CurrentRemainReroll = currentRemainReroll;
         }
@@ -21,17 +22,17 @@ namespace Yacht
         protected static int RollDice => Random.Next(6) + 1;
         protected static int[] RollFiveDices => Enumerable.Range(0, 5).Select(_ => RollDice).ToArray();
 
-        public static TurnContext New()
+        public static TurnContext New(DisboardPlayer firstPlayer)
             => Next_(
-                nextPlayerIndex: 0
+                nextPlayer: firstPlayer
                 );
 
-        public TurnContext Next(int nextPlayerIndex)
-            => Next_(nextPlayerIndex);
+        public TurnContext Next(DisboardPlayer nextPlayer)
+            => Next_(nextPlayer);
 
-        static TurnContext Next_(int nextPlayerIndex)
+        static TurnContext Next_(DisboardPlayer nextPlayer)
             => new TurnContext(
-                currentPlayerIndex: nextPlayerIndex,
+                currentPlayer: nextPlayer,
                 currentDices: RollFiveDices,
                 currentRemainReroll: 2
                 );
@@ -53,7 +54,7 @@ namespace Yacht
             newDices.AddRange(Enumerable.Range(0, 5 - newDices.Count).Select(_ => RollDice));
 
             return new TurnContext(
-                currentPlayerIndex: CurrentPlayerIndex,
+                currentPlayer: CurrentPlayer,
                 currentDices: newDices.ToArray(),
                 currentRemainReroll: CurrentRemainReroll - 1
                 );

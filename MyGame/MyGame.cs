@@ -1,9 +1,10 @@
 ﻿using Disboard;
+using System.Linq;
 
 class MyGame : DisboardGame
 {
     // 여기에 멤버변수를 선언하세요.
-    int currentPlayerIndex = 0;
+    DisboardPlayer currentPlayer;
 
     public MyGame(DisboardGameInitData initData) : base(initData)
     {
@@ -11,12 +12,14 @@ class MyGame : DisboardGame
 
 
         // InitialPlayers에는 게임에 참가하는 인원들이 있습니다.
-        DisboardPlayer firstPlayer = InitialPlayers[currentPlayerIndex];
+        currentPlayer = InitialPlayers.First();
+        // currentPlayer = InitialPlayers[0];
+        // 위 두 줄은 같은 코드입니다.
 
 
         // Send는 그룹 채팅에 메시지를 보내는 함수입니다.
         // SendImage, SendImages 함수도 사용할 수 있습니다.
-        Send($"첫번째 플레이어: {firstPlayer.Mention}");
+        Send($"첫번째 플레이어: {currentPlayer.Mention}");
 
 
         // 게임을 종료하려면 OnFinish()를 호출합니다.
@@ -29,20 +32,15 @@ class MyGame : DisboardGame
         // 메시지를 받았을 때의 로직을 입력합니다.
 
 
-        if (player == InitialPlayers[currentPlayerIndex])
+        if (player == currentPlayer)
         {
             // Send는 그룹 채팅에 메시지를 보내는 함수입니다.
             // SendImage, SendImages 함수도 사용할 수 있습니다.
             Send($"플레이어의 메시지: {message}");
 
-            currentPlayerIndex += 1;
-            if (currentPlayerIndex >= InitialPlayers.Count)
-            {
-                currentPlayerIndex = 0;
-            }
+            currentPlayer = currentPlayer.NextPlayer;
 
-            DisboardPlayer nextPlayer = InitialPlayers[currentPlayerIndex];
-            Send($"다음 플레이어: {nextPlayer.Mention}");
+            Send($"다음 플레이어: {currentPlayer.Mention}");
         }
 
 

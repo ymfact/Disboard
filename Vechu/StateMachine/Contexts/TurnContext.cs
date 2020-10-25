@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Disboard;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,7 +7,7 @@ namespace Vechu
 {
     class TurnContext
     {
-        public int PlayerIndex { get; }
+        public DisboardPlayer CurrentPlayer { get; }
         public int[] Dices { get; }
         public int RemainReroll { get; }
 
@@ -15,31 +16,31 @@ namespace Vechu
         protected static int[] RollTwoDices => Enumerable.Range(0, 2).Select(_ => RollDice).ToArray();
 
         TurnContext(
-            int playerIndex,
+            DisboardPlayer currentPlayer,
             int[] dices,
             int remainReroll
             )
         {
-            PlayerIndex = playerIndex;
+            CurrentPlayer = currentPlayer;
             Dices = dices;
             RemainReroll = remainReroll;
         }
 
-        public static TurnContext New()
+        public static TurnContext New(DisboardPlayer firstPlayer)
             => Next_(
-                nextPlayerIndex: 0
+                nextPlayer: firstPlayer
                 );
 
-        public TurnContext Next(int nextPlayerIndex)
+        public TurnContext Next(DisboardPlayer nextPlayer)
             => Next_(
-                nextPlayerIndex
+                nextPlayer
                 );
 
-        static TurnContext Next_(int nextPlayerIndex)
+        static TurnContext Next_(DisboardPlayer nextPlayer)
         {
             var newDices = RollTwoDices;
             return new TurnContext(
-                playerIndex: nextPlayerIndex,
+                currentPlayer: nextPlayer,
                 dices: newDices,
                 remainReroll: newDices[0] == newDices[1] ? 2 : 1
                 );
@@ -62,7 +63,7 @@ namespace Vechu
             newDices.AddRange(Enumerable.Range(0, 2 - newDices.Count).Select(_ => RollDice));
 
             return new TurnContext(
-                playerIndex: PlayerIndex,
+                currentPlayer: CurrentPlayer,
                 dices: newDices.ToArray(),
                 remainReroll: newDices[0] == newDices[1] ? dicesToReroll.Count : dicesToReroll.Count - 1
                 );

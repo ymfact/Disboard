@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Disboard;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,7 +7,7 @@ namespace Xanth
 {
     class TurnContext
     {
-        public int PlayerIndex { get; }
+        public Player CurrentPlayer { get; }
         public int[] Dices { get; }
         public int RemainReroll { get; }
         public int RemainMove { get; }
@@ -17,14 +18,14 @@ namespace Xanth
         protected static int[] RollFourDices => Enumerable.Range(0, 4).Select(_ => RollDice).ToArray();
 
         TurnContext(
-            int playerIndex,
+            Player currentPlayer,
             int[] dices,
             int remainReroll,
             int remainMove,
             bool isStuckInThisTurn
             )
         {
-            PlayerIndex = playerIndex;
+            CurrentPlayer = currentPlayer;
             Dices = dices;
             RemainReroll = remainReroll;
             RemainMove = remainMove;
@@ -34,24 +35,24 @@ namespace Xanth
         public static TurnContext New(BoardContext board)
             => Next_(
                 board: board,
-                nextPlayerIndex: 0
+                nextPlayer: board.PlayerDict.First().Value
                 );
 
-        public TurnContext Next(BoardContext board, int nextPlayerIndex)
+        public TurnContext Next(BoardContext board, Player nextPlayer)
             => Next_(
                 board: board,
-                nextPlayerIndex: nextPlayerIndex
+                nextPlayer: nextPlayer
                 );
 
-        static TurnContext Next_(BoardContext board, int nextPlayerIndex)
+        static TurnContext Next_(BoardContext board, Player nextPlayer)
         {
             var newDices = RollFourDices;
             return new TurnContext(
-                playerIndex: nextPlayerIndex,
+                currentPlayer: nextPlayer,
                 dices: newDices,
                 remainReroll: 3,
                 remainMove: 4,
-                isStuckInThisTurn: board.IsStuck(nextPlayerIndex, newDices)
+                isStuckInThisTurn: board.IsStuck(nextPlayer, newDices)
                 );
         }
 
@@ -73,17 +74,17 @@ namespace Xanth
             var newDicesArray = newDices.ToArray();
 
             return new TurnContext(
-                playerIndex: PlayerIndex,
+                currentPlayer: CurrentPlayer,
                 dices: newDicesArray,
                 remainReroll: dicesToReroll.Count - 1,
                 remainMove: dicesToReroll.Count,
-                isStuckInThisTurn: board.IsStuck(PlayerIndex, newDicesArray)
+                isStuckInThisTurn: board.IsStuck(CurrentPlayer, newDicesArray)
                 );
         }
 
         public TurnContext OnMove()
             => new TurnContext(
-                playerIndex: PlayerIndex,
+                currentPlayer: CurrentPlayer,
                 dices: Dices,
                 remainReroll: 0,
                 remainMove: RemainMove - 1,

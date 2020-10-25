@@ -7,21 +7,34 @@ using static Disboard.Macro;
 
 namespace Yacht
 {
-    partial class TurnState : GameState
+    class TurnState : GameState
     {
+        public BoardContext Board { get; }
+        TurnContext Turn { get; }
+
+        TurnState(
+            DisboardGame ctx,
+            BoardContext board,
+            TurnContext turn
+            ) : base(ctx)
+        {
+            Board = board;
+            Turn = turn;
+        }
+
         public static TurnState New(DisboardGame ctx, IReadOnlyList<DisboardPlayer> players)
         {
             new YachtFactory().OnHelp(ctx.Channel);
 
             var board = BoardContext.New(players);
-            var turn = TurnContext.New();
+            var turn = TurnContext.New(players.First());
             var next = StartTurn(ctx, board, turn);
             return next;
         }
 
         public override IGameState OnGroup(DisboardPlayer player, string message)
         {
-            if (player == CurrentPlayer)
+            if (player == Turn.CurrentPlayer)
             {
                 var split = message.Split();
                 if (split.Length > 0 && split[0].ToLower() == "r")
@@ -70,7 +83,7 @@ namespace Yacht
         IGameState Submit(string message)
         {
             var split = message.Split();
-            var scoreBoard = Board.ScoreBoardDict[CurrentPlayer];
+            var scoreBoard = Board.ScoreBoardDict[Turn.CurrentPlayer];
             if (split.Length != 2)
             {
                 ctx.Send(W("이니셜을 입력하세요. 예시: S 3k"));
@@ -113,17 +126,12 @@ namespace Yacht
             }
             else
             {
-                int newPlayerIndex = Turn.CurrentPlayerIndex + 1;
-                if (newPlayerIndex >= Board.Players.Count)
-                {
-                    newPlayerIndex = 0;
-                }
-                return StartTurn(newPlayerIndex);
+                return StartTurn(Turn.CurrentPlayer.NextPlayer);
             }
         }
 
-        TurnState StartTurn(int nextPlayerIndex)
-            => StartTurn(ctx, Board, Turn.Next(nextPlayerIndex));
+        TurnState StartTurn(DisboardPlayer nextPlayer)
+            => StartTurn(ctx, Board, Turn.Next(nextPlayer));
 
         static TurnState StartTurn(DisboardGame ctx, BoardContext board, TurnContext turn)
         {
@@ -139,7 +147,7 @@ namespace Yacht
 
         void PrintTurn()
         {
-            var image = ctx.Render(() => Board.GetBoardGrid((CurrentPlayer, Turn.CurrentDices)));
+            var image = ctx.Render(() => Board.GetBoardGrid((Turn.CurrentPlayer, Turn.CurrentDices)));
 
             var rerollTexts = Enumerable.Range(0, 3).Reverse().Select(_ => _ < Turn.CurrentRemainReroll).Select(_ => _ ? ":arrows_counterclockwise:" : ":ballot_box_with_check:");
             var rerollString = string.Join(" ", rerollTexts);
@@ -151,25 +159,7 @@ namespace Yacht
             var embed = new DiscordEmbedBuilder()
                 .AddField("Dices", diceString, inline: true)
                 .AddField("Reroll", rerollString, inline: true);
-            ctx.SendImage(image, $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn", embed);
+            ctx.SendImage(image, $"{Turn.CurrentPlayer.Mention} {Turn.CurrentPlayer.Name}'s turn", embed);
         }
-    }
-
-    partial class TurnState
-    {
-        public BoardContext Board { get; }
-        TurnContext Turn { get; }
-
-        TurnState(
-            DisboardGame ctx,
-            BoardContext board,
-            TurnContext turn
-            ) : base(ctx)
-        {
-            Board = board;
-            Turn = turn;
-        }
-
-        public DisboardPlayer CurrentPlayer => Board.Players.ToList()[Turn.CurrentPlayerIndex];
     }
 }

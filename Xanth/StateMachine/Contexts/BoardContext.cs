@@ -106,7 +106,7 @@ namespace Xanth
             currentPlayer.RemainFirstMoveBonus = false;
         }
 
-        public Disgrid.Disgrid GetBoardGrid((int playerIndex, Dictionary<Slot, Slot.Permission> reachables)? CurrentState)
+        public Disgrid.Disgrid GetBoardGrid((Player player, Dictionary<Slot, Slot.Permission> reachables)? CurrentState)
         {
             int rowCount = 1 + BoardSize;
             int columnCount = 1 + BoardSize;
@@ -159,7 +159,7 @@ namespace Xanth
                         if (reachability == Slot.Permission.Reachable)
                             border.BorderBrush = transparentWhite;
                         if (reachability == Slot.Permission.Overwritable)
-                            border.BorderBrush = Players[CurrentState.Value.playerIndex].Color.Brush();
+                            border.BorderBrush = CurrentState.Value.player.Color.Brush();
 
                     }
                 }
@@ -217,13 +217,12 @@ namespace Xanth
             overwritables.ToList().ForEach(_ => result[Board.Slots[_.Item1][_.Item2]] = Slot.Permission.Overwritable);
             return result;
         }
-        public bool IsStuck(int playerIndex, int[] dices)
+        public bool IsStuck(Player player, int[] dices)
         {
-            var player = Players[playerIndex];
             var reachables = GetReachables(player, dices, 1);
             return reachables.Count == 0;
         }
-        public void Drop(int playerIndex)
-            => Players[playerIndex].IsDropped = true;
+        public void Drop(Player player)
+            => player.IsDropped = true;
     }
 }

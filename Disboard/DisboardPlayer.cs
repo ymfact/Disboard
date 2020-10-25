@@ -15,8 +15,13 @@ namespace Disboard
             Nickname = nickname;
             Mention = mention;
             Channel = channel;
+            NextPlayer = this;
         }
         internal UserIdType Id { get; }
+        /// <summary>
+        /// 다음 차례의 플레이어입니다. 순서는 InitialPlayers의 순서와 일치하며, 게임 시작시 임의로 정해집니다.
+        /// </summary>
+        public DisboardPlayer NextPlayer { get; set; }
         /// <summary>
         /// 이름입니다. 변동될 경우 실시간으로 반영됩니다.
         /// </summary>

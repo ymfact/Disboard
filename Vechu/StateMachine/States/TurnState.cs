@@ -13,7 +13,7 @@ namespace Vechu
             new VechuFactory().OnHelp(ctx.Channel);
 
             var board = BoardContext.New(players);
-            var turn = TurnContext.New();
+            var turn = TurnContext.New(players.First());
             var next = StartTurn(ctx: ctx, board: board, turn: turn);
 
             return next;
@@ -32,11 +32,9 @@ namespace Vechu
             Turn = turn;
         }
 
-        public DisboardPlayer CurrentPlayer => Board.Players.ToList()[Turn.PlayerIndex];
-
         public override IGameState OnGroup(DisboardPlayer player, string message)
         {
-            if (player == CurrentPlayer)
+            if (player == Turn.CurrentPlayer)
             {
                 var split = message.Split();
                 if (split.Length > 0 && split[0].ToLower() == "r")
@@ -97,12 +95,12 @@ namespace Vechu
             var initials = split[1];
             if (initials == "+")
             {
-                Board.Add(CurrentPlayer, Turn.Dices[0] * Turn.Dices[1]);
+                Board.Add(Turn.CurrentPlayer, Turn.Dices[0] * Turn.Dices[1]);
                 return ProceedAndStartTurn();
             }
             else if (initials == "-")
             {
-                Board.Add(CurrentPlayer, -Turn.Dices[0] * Turn.Dices[1]);
+                Board.Add(Turn.CurrentPlayer, -Turn.Dices[0] * Turn.Dices[1]);
                 return ProceedAndStartTurn();
             }
             else
@@ -114,12 +112,8 @@ namespace Vechu
 
         IGameState ProceedAndStartTurn()
         {
-            int newPlayerIndex = Turn.PlayerIndex + 1;
-            if (newPlayerIndex >= Board.Players.Count)
-            {
-                newPlayerIndex = 0;
-            }
-            if (Board.ScoreDict[Board.Players[newPlayerIndex]] == 50)
+            DisboardPlayer nextPlayer = Turn.CurrentPlayer.NextPlayer;
+            if (Board.ScoreDict[nextPlayer] == 50)
             {
                 var image = ctx.Render(() => Board.GetBoardGrid(null));
 
@@ -135,12 +129,12 @@ namespace Vechu
             }
             else
             {
-                return StartTurn(newPlayerIndex);
+                return StartTurn(nextPlayer);
             }
         }
 
-        TurnState StartTurn(int nextPlayerIndex)
-            => StartTurn(ctx, Board, Turn.Next(nextPlayerIndex));
+        TurnState StartTurn(DisboardPlayer nextPlayer)
+            => StartTurn(ctx, Board, Turn.Next(nextPlayer));
 
         static TurnState StartTurn(DisboardGame ctx, BoardContext board, TurnContext turn)
         {
@@ -155,7 +149,7 @@ namespace Vechu
 
         void PrintTurn()
         {
-            var image = ctx.Render(() => Board.GetBoardGrid((CurrentPlayer, Turn.Dices)));
+            var image = ctx.Render(() => Board.GetBoardGrid((Turn.CurrentPlayer, Turn.Dices)));
 
             var rerollTexts = Enumerable.Range(0, 2).Reverse().Select(_ => _ < Turn.RemainReroll).Select(_ => _ ? ":arrows_counterclockwise:" : ":ballot_box_with_check:");
             var rerollString = string.Join(" ", rerollTexts);
@@ -167,7 +161,7 @@ namespace Vechu
             var embed = new DiscordEmbedBuilder()
                 .AddField("Dices", diceString, inline: true)
                 .AddField("Reroll", rerollString, inline: true);
-            ctx.SendImage(image, $"{CurrentPlayer.Mention} {CurrentPlayer.Name}'s turn", embed);
+            ctx.SendImage(image, $"{Turn.CurrentPlayer.Mention} {Turn.CurrentPlayer.Name}'s turn", embed);
         }
     }
 }
