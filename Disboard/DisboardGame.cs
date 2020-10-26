@@ -21,7 +21,8 @@ namespace Disboard
             InitialPlayers = initData.Players;
             MessageQueue = initData.MessageQueue;
             Render = Channel.Render;
-            OnFinish = () => {
+            OnFinish = () =>
+            {
                 IsFinished = true;
                 initData.OnFinish(initData.Channel.Id);
             };

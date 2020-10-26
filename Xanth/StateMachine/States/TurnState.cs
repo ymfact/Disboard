@@ -8,7 +8,7 @@ namespace Xanth
 {
     class TurnState : GameState
     {
-        static public TurnState New(DisboardGame ctx, IReadOnlyList<Disboard.DisboardPlayer> players)
+        static public TurnState New(DisboardGame ctx, IReadOnlyList<DisboardPlayer> players)
         {
             new XanthFactory().OnHelp(ctx.Channel);
 
@@ -32,7 +32,7 @@ namespace Xanth
             Turn = turn;
         }
 
-        public override IGameState OnGroup(Disboard.DisboardPlayer player, string message)
+        public override IGameState OnGroup(DisboardPlayer player, string message)
         {
             if (player == Turn.CurrentPlayer.Disboard)
             {
@@ -151,9 +151,9 @@ namespace Xanth
                 if (Turn.IsStuckInThisTurn)
                     Board.Drop(Turn.CurrentPlayer);
 
-                if (Board.Players.Where(_ => _.IsDropped == false).Count() == 1)
+                if (Turn.CurrentPlayer.NextPlayer == Turn.CurrentPlayer.NextPlayer.NextPlayer)
                 {
-                    return Finish(new[] { Turn.CurrentPlayer.GetNextPlayer(Board) });
+                    return Finish(new[] { Turn.CurrentPlayer.NextPlayer });
                 }
                 else
                 {

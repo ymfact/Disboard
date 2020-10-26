@@ -103,7 +103,11 @@ namespace Disboard
             var messageQueue = new ConcurrentQueue<Task>();
             var channel = new DisboardChannel(discordChannel, new ConcurrentQueue<Task>(), Application.Dispatcher);
             var mockPlayers = Enumerable.Range(0, mockPlayerCount).Select(_ => new MockPlayer(_, discordChannel.Guild.Owner, channel) as DisboardPlayer).ToList();
-            mockPlayers.Enumerate().ToList().ForEach(_ => _.elem.NextPlayer = mockPlayers[(_.index == mockPlayers.Count - 1) ? 0 : _.index + 1]);
+            foreach (var (index, player) in mockPlayers.Enumerate())
+            {
+                int nextPlayerIndex = (index == mockPlayers.Count - 1) ? 0 : index + 1;
+                player.NextPlayer = mockPlayers[nextPlayerIndex];
+            }
             await NewGame_(discordChannel, mockPlayers, messageQueue, isDebug: true);
         }
         async Task NewGame(DiscordChannel channel, IEnumerable<DiscordUser> users)
@@ -119,7 +123,11 @@ namespace Disboard
             var dMChannels = await Task.WhenAll(members.Select(_ => _.CreateDmChannelAsync()));
             var messageQueue = new ConcurrentQueue<Task>();
             var players = members.Zip(dMChannels).Select(_ => new RealPlayer(_.First, new DisboardChannel(_.Second, messageQueue, Application.Dispatcher)) as DisboardPlayer).OrderBy(_ => random.Next()).ToList();
-            players.Enumerate().ToList().ForEach(_ => _.elem.NextPlayer = players[(_.index == players.Count - 1) ? 0 : _.index + 1]);
+            foreach (var (index, player) in players.Enumerate())
+            {
+                int nextPlayerIndex = (index == players.Count - 1) ? 0 : index + 1;
+                player.NextPlayer = players[nextPlayerIndex];
+            }
             await NewGame_(channel, players, messageQueue);
         }
         async Task NewGame_(DiscordChannel channel, List<DisboardPlayer> players, ConcurrentQueue<Task> messageQueue, bool isDebug = false)

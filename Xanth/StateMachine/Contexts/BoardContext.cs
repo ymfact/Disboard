@@ -10,20 +10,19 @@ namespace Xanth
 {
     class BoardContext
     {
-        public IReadOnlyDictionary<Disboard.DisboardPlayer, Player> PlayerDict { get; }
         public IReadOnlyList<Player> Players { get; }
         public IReadOnlyList<int> BannedOnRows { get; }
         public IReadOnlyList<int> BannedOnColumns { get; }
         public Board Board { get; }
         public int BoardSize { get; }
 
-        public static BoardContext New(IReadOnlyList<Disboard.DisboardPlayer> players)
+        public static BoardContext New(IReadOnlyList<DisboardPlayer> players)
             => new BoardContext(players);
 
-        BoardContext(IReadOnlyList<Disboard.DisboardPlayer> players)
+        BoardContext(IReadOnlyList<DisboardPlayer> disboardPlayers)
         {
             IList<Marker> markers;
-            if (players.Count == 2)
+            if (disboardPlayers.Count == 2)
             {
                 BoardSize = 4;
                 markers = new[] { new Marker(3, 0, BoardSize), new Marker(0, 3, BoardSize) };
@@ -34,8 +33,13 @@ namespace Xanth
                 markers = new[] { new Marker(4, 1, BoardSize), new Marker(3, 4, BoardSize), new Marker(0, 3, BoardSize), new Marker(0, 1, BoardSize) };
             }
 
-            PlayerDict = players.Enumerate().ToDictionary(_ => _.elem, _ => new Player(players, _.elem, markers[_.index]));
-            Players = players.Select(_ => PlayerDict[_]).ToList();
+            Players = disboardPlayers.Select((player, index) => new Player(disboardPlayers, player, markers[index])).ToList();
+
+            foreach (var (index, player) in Players.Enumerate())
+            {
+                int nextPlayerIndex = (index == Players.Count - 1) ? 0 : index + 1;
+                player.NextPlayer = Players[nextPlayerIndex];
+            }
 
             Random random = new Random();
             int rollDice() => random.Next(1, 7);

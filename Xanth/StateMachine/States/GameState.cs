@@ -9,8 +9,8 @@ namespace Xanth
         protected GameState(DisboardGame ctx)
             => this.ctx = ctx;
 
-        public abstract IGameState OnGroup(Disboard.DisboardPlayer player, string message);
+        public abstract IGameState OnGroup(DisboardPlayer player, string message);
 
-        IGameState IGameState.OnGroup(Disboard.DisboardPlayer player, string message) => OnGroup(player, message);
+        IGameState IGameState.OnGroup(DisboardPlayer player, string message) => OnGroup(player, message);
     }
 }

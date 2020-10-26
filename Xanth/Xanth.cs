@@ -19,7 +19,7 @@ namespace Xanth
             }
         }
 
-        public override void OnGroup(Disboard.DisboardPlayer player, string message)
+        public override void OnGroup(DisboardPlayer player, string message)
             => State = State.OnGroup(player, message);
     }
 

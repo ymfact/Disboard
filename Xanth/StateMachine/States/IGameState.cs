@@ -1,7 +1,9 @@
-﻿namespace Xanth
+﻿using Disboard;
+
+namespace Xanth
 {
     interface IGameState
     {
-        IGameState OnGroup(Disboard.DisboardPlayer player, string message);
+        IGameState OnGroup(DisboardPlayer player, string message);
     }
 }

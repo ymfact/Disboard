@@ -1,13 +1,17 @@
 ﻿using Disboard;
 
-class Program
+namespace MyGame
 {
-    [System.STAThread()]
-    static void Main()
+    class Program
     {
-        var disboard = new Disboard<MyGameFactory>();
-        disboard.Run(Token.token);
+        [System.STAThread()]
+        static void Main()
+        {
+            var disboard = new Disboard<MyGameFactory>();
+            disboard.Run(Token.token);
+        }
     }
+
 }
 
 /* https://discordpy.readthedocs.io/en/latest/discord.html

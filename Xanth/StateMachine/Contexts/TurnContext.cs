@@ -1,5 +1,4 @@
-﻿using Disboard;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -35,13 +34,13 @@ namespace Xanth
         public static TurnContext New(BoardContext board)
             => Next_(
                 board: board,
-                nextPlayer: board.PlayerDict.First().Value
+                nextPlayer: board.Players.First()
                 );
 
         public TurnContext Next(BoardContext board)
             => Next_(
                 board: board,
-                nextPlayer: CurrentPlayer.GetNextPlayer(board)
+                nextPlayer: CurrentPlayer.NextPlayer
                 );
 
         static TurnContext Next_(BoardContext board, Player nextPlayer)
