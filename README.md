@@ -51,7 +51,6 @@ IDisboardGameFactory를 구현하면 `BOT help` 명령어를 지원할 수 있�
 
 #### Image from WPF Controls
 WPF 컨트롤을 사용하여 이미지를 그릴 수 있습니다. EchoVisual.cs를 예제로써 참고하세요.
-사용하려면 Main 함수 윗줄에 `[System.STAThread()]`를 추가해야 합니다.
 
 XAML으로 사용자 정의 컨트롤을 사용하려면 다음 작업을 통해 프로젝트가 WPF를 사용하도록 설정해야 합니다.
 .NET Core 3.1 프로젝트를 기준으로는, csproj 파일에 `<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">`를 사용하고, `<PropertyGroup>` `</PropertyGroup>` 내부에 `<UseWPF>true</UseWPF>`를 추가합니다.
@@ -59,7 +58,6 @@ XAML으로 사용자 정의 컨트롤을 사용하려면 다음 작업을 통해
 #### Disgrid
 Disgrid를 사용하면 텍스트로 이루어진 표를 간단히 만들 수 있습니다.
 BoardContext.cs의 GetBoardGrid를 예제로써 참고하세요.
-사용하려면 Main 함수 윗줄에 `[System.STAThread()]`를 추가해야 합니다.
 
 #### DM
 DisboardGameUsingDM을 상속하면 DM을 사용할 수 있습니다.
