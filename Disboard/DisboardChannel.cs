@@ -29,7 +29,6 @@ namespace Disboard
         public string URL { get; }
         /// <summary>
         /// WPF 컨트롤을 사용하여 이미지를 그릴 수 있습니다. EchoVisual.cs를 예제로써 참고하세요.
-        /// 사용하려면 Main 함수 윗줄에 [System.STAThread()]를 추가해야 합니다.
         /// </summary>
         public RenderType Render { get; }
 
