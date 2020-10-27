@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -54,7 +55,7 @@ namespace Disboard
         bool IsInitialized = false;
 
         IDisboardGameFactory GameFactory { get; } = new GameFactoryType();
-        Application Application { get; } = new Application();
+        Dispatcher STADispatcher { get; set; } = null!;
         ConcurrentDictionary<ChannelIdType, DisboardGame> Games { get; } = new ConcurrentDictionary<ChannelIdType, DisboardGame>();
         Dictionary<UserIdType, DisboardGameUsingDM> GamesByUsers { get; } = new Dictionary<UserIdType, DisboardGameUsingDM>();
         DispatcherTimer? TickTimer { get; set; } = null;
@@ -79,8 +80,16 @@ namespace Disboard
             discord.GuildMemberUpdated += GuildMemberUpdated;
             discord.UserUpdated += UserUpdated;
 
-            Task.Run(() => discord.ConnectAsync().GetAwaiter().GetResult());
-            Application.Run();
+            Thread thread = new Thread(() =>
+            {
+                Application Application = new Application();
+                STADispatcher = Application.Dispatcher;
+                Application.Run();
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+
+            discord.ConnectAsync().GetAwaiter().GetResult();
         }
 
         Task GuildMemberUpdated(GuildMemberUpdateEventArgs args)
@@ -101,7 +110,7 @@ namespace Disboard
         async Task NewDebugGame(DiscordChannel discordChannel, int mockPlayerCount)
         {
             var messageQueue = new ConcurrentQueue<Task>();
-            var channel = new DisboardChannel(discordChannel, new ConcurrentQueue<Task>(), Application.Dispatcher);
+            var channel = new DisboardChannel(discordChannel, new ConcurrentQueue<Task>(), STADispatcher);
             var mockPlayers = Enumerable.Range(0, mockPlayerCount).Select(_ => new MockPlayer(_, discordChannel.Guild.Owner, channel) as DisboardPlayer).ToList();
             foreach (var (index, player) in mockPlayers.Enumerate())
             {
@@ -122,7 +131,7 @@ namespace Disboard
             var members = channel.Guild.Members.Where(_ => userIds.Contains(_.Id));
             var dMChannels = await Task.WhenAll(members.Select(_ => _.CreateDmChannelAsync()));
             var messageQueue = new ConcurrentQueue<Task>();
-            var players = members.Zip(dMChannels).Select(_ => new RealPlayer(_.First, new DisboardChannel(_.Second, messageQueue, Application.Dispatcher)) as DisboardPlayer).OrderBy(_ => random.Next()).ToList();
+            var players = members.Zip(dMChannels).Select(_ => new RealPlayer(_.First, new DisboardChannel(_.Second, messageQueue, STADispatcher)) as DisboardPlayer).OrderBy(_ => random.Next()).ToList();
             foreach (var (index, player) in players.Enumerate())
             {
                 int nextPlayerIndex = (index == players.Count - 1) ? 0 : index + 1;
@@ -132,7 +141,7 @@ namespace Disboard
         }
         async Task NewGame_(DiscordChannel channel, List<DisboardPlayer> players, ConcurrentQueue<Task> messageQueue, bool isDebug = false)
         {
-            var gameInitializeData = new DisboardGameInitData(isDebug, channel, players, OnFinish, Application.Dispatcher, messageQueue);
+            var gameInitializeData = new DisboardGameInitData(isDebug, channel, players, OnFinish, STADispatcher, messageQueue);
             DisboardGame game = GameFactory.New(gameInitializeData);
 
             if (game.IsFinished)
@@ -203,7 +212,7 @@ namespace Disboard
                 TickTimer.Tick -= Tick;
                 TickTimer.Stop();
             }
-            TickTimer = new DispatcherTimer(DispatcherPriority.Background, Application.Dispatcher)
+            TickTimer = new DispatcherTimer(DispatcherPriority.Background, STADispatcher)
             {
                 Interval = TimeSpan.FromSeconds(0.1),
             };
@@ -393,7 +402,7 @@ namespace Disboard
                         try
                         {
                             var messageQueue = new ConcurrentQueue<Task>();
-                            GameFactory.OnHelp(new DisboardChannel(channel, messageQueue, Application.Dispatcher));
+                            GameFactory.OnHelp(new DisboardChannel(channel, messageQueue, STADispatcher));
                             while (messageQueue.TryDequeue(out var messageTask))
                                 await messageTask;
                         }
