@@ -131,6 +131,11 @@ namespace Disboard
             {
                 users = channel.Guild.Members.Where(_ => !_.IsBot && !_.IsCurrent && _.Presence != null && _.Presence.Status == UserStatus.Online);
                 await channel.SendMessageAsync("`참가 인원을 입력하지 않는 경우, 현재 온라인인 유저들로 게임이 시작됩니다.`");
+                if (users.Count() == 0)
+                {
+                    await channel.SendMessageAsync("`현재 온라인인 유저가 없어 게임을 시작하지 못했습니다.`");
+                    return;
+                }
             }
             var random = new Random();
             var userIds = users.Select(_ => _.Id);
@@ -205,7 +210,14 @@ namespace Disboard
                     if (_.mockPlayerCount == "")
                         await NewGame(_.channel, new DiscordUser[] { });
                     else if (int.TryParse(_.mockPlayerCount, out int mockPlayerCount))
-                        await NewDebugGame(_.channel, mockPlayerCount);
+                        if(mockPlayerCount > 0)
+                        {
+                            await NewDebugGame(_.channel, mockPlayerCount);
+                        }
+                        else
+                        {
+                            await _.channel.SendMessageAsync("`채널 토픽 중 debug 키워드에 문제가 있습니다.`");
+                        }
                 }));
 
                 IsInitialized = true;
