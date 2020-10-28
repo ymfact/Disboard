@@ -4,7 +4,7 @@ namespace Yacht
 {
     class Yacht : DisboardGame
     {
-        IGameState State { get; set; } = NullState.New;
+        IGameState State { get; set; }
 
         public Yacht(DisboardGameInitData initData) : base(initData)
             => State = TurnState.New(this, InitialPlayers);

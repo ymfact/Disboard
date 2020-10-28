@@ -4,7 +4,7 @@ namespace Vechu
 {
     class Vechu : DisboardGame
     {
-        IGameState State { get; set; } = NullState.New;
+        IGameState State { get; set; }
 
         public Vechu(DisboardGameInitData initData) : base(initData)
             => State = TurnState.New(this, InitialPlayers);
