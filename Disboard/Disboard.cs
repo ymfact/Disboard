@@ -339,7 +339,7 @@ namespace Disboard
                     await channel.SendMessageAsync("`진행중인 게임이 없습니다.`");
                 }
             }
-            if (channel.Type == ChannelType.Text || channel.Type == ChannelType.Group)
+            else if (channel.Type == ChannelType.Text)
             {
                 var guild = __.Guild;
                 var game = Games.GetValueOrDefault(channel.Id);
