@@ -7,7 +7,7 @@ namespace MyGame
         static void Main()
         {
             var disboard = new Disboard<MyGameFactory>();
-            disboard.Run("Token.token");
+            disboard.Run(Token.token);
         }
     }
 
