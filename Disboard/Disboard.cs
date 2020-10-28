@@ -61,6 +61,21 @@ namespace Disboard
         DispatcherTimer? TickTimer { get; set; } = null;
 
         /// <summary>
+        /// Disboard를 생성합니다.
+        /// </summary>
+        public Disboard()
+        {
+            Thread thread = new Thread(() =>
+            {
+                Application Application = new Application();
+                STADispatcher = Application.Dispatcher;
+                Application.Run();
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start();
+        }
+
+        /// <summary>
         /// Disboard를 실행합니다. 실행을 블락하므로 프로그램의 마지막줄에 있어야 합니다.
         /// </summary>
         /// <param name="token">디스코드 홈페이지에서 토큰을 발급해야 합니다.</param>
@@ -79,15 +94,6 @@ namespace Disboard
             discord.MessageCreated += MessageCreated;
             discord.GuildMemberUpdated += GuildMemberUpdated;
             discord.UserUpdated += UserUpdated;
-
-            Thread thread = new Thread(() =>
-            {
-                Application Application = new Application();
-                STADispatcher = Application.Dispatcher;
-                Application.Run();
-            });
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
 
             discord.ConnectAsync().GetAwaiter().GetResult();
         }
