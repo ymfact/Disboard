@@ -115,7 +115,7 @@ namespace Disboard
         }
         async Task NewDebugGame(DiscordChannel discordChannel, int mockPlayerCount)
         {
-            var messageQueue = new ConcurrentQueue<Task>();
+            var messageQueue = new ConcurrentQueue<Func<Task>>();
             var channel = new DisboardChannel(discordChannel, messageQueue, STADispatcher);
             var mockPlayers = Enumerable.Range(0, mockPlayerCount).Select(_ => new MockPlayer(_, discordChannel.Guild.Owner, channel) as DisboardPlayer).ToList();
             foreach (var (index, player) in mockPlayers.Enumerate())
@@ -141,7 +141,7 @@ namespace Disboard
             var userIds = users.Select(_ => _.Id);
             var members = channel.Guild.Members.Where(_ => userIds.Contains(_.Id));
             var dMChannels = await Task.WhenAll(members.Select(_ => _.CreateDmChannelAsync()));
-            var messageQueue = new ConcurrentQueue<Task>();
+            var messageQueue = new ConcurrentQueue<Func<Task>>();
             var players = members.Zip(dMChannels).Select(_ => new RealPlayer(_.First, new DisboardChannel(_.Second, messageQueue, STADispatcher)) as DisboardPlayer).OrderBy(_ => random.Next()).ToList();
             foreach (var (index, player) in players.Enumerate())
             {
@@ -150,7 +150,7 @@ namespace Disboard
             }
             await NewGame_(channel, players, messageQueue);
         }
-        async Task NewGame_(DiscordChannel channel, List<DisboardPlayer> players, ConcurrentQueue<Task> messageQueue, bool isDebug = false)
+        async Task NewGame_(DiscordChannel channel, List<DisboardPlayer> players, ConcurrentQueue<Func<Task>> messageQueue, bool isDebug = false)
         {
             var gameInitializeData = new DisboardGameInitData(isDebug, channel, players, OnFinish, STADispatcher, messageQueue);
             DisboardGame game = GameFactory.New(gameInitializeData);
@@ -295,8 +295,8 @@ namespace Disboard
                     try
                     {
                         task();
-                        while (game.MessageQueue.TryDequeue(out var messageTask))
-                            await messageTask;
+                        while (game.MessageQueue.TryDequeue(out var messageTaskGetter))
+                            await messageTaskGetter();
                     }
                     catch (Exception e)
                     {
@@ -419,10 +419,10 @@ namespace Disboard
 
                         try
                         {
-                            var messageQueue = new ConcurrentQueue<Task>();
+                            var messageQueue = new ConcurrentQueue<Func<Task>>();
                             GameFactory.OnHelp(new DisboardChannel(channel, messageQueue, STADispatcher));
-                            while (messageQueue.TryDequeue(out var messageTask))
-                                await messageTask;
+                            while (messageQueue.TryDequeue(out var messageTaskGetter))
+                                await messageTaskGetter();
                         }
                         catch (Exception e)
                         {

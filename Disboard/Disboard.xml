@@ -81,7 +81,7 @@
             WPF 컨트롤을 사용하여 이미지를 그릴 수 있습니다. EchoVisual.cs를 예제로써 참고하세요.
             </summary>
         </member>
-        <member name="M:Disboard.DisboardChannel.#ctor(DSharpPlus.Entities.DiscordChannel,System.Collections.Concurrent.ConcurrentQueue{System.Threading.Tasks.Task},System.Windows.Threading.Dispatcher)">
+        <member name="M:Disboard.DisboardChannel.#ctor(DSharpPlus.Entities.DiscordChannel,System.Collections.Concurrent.ConcurrentQueue{System.Func{System.Threading.Tasks.Task}},System.Windows.Threading.Dispatcher)">
             <summary>
             디스코드 채널입니다. 그룹 채널일 수도, DM 채널일 수도 있습니다.
             </summary>

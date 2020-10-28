@@ -19,8 +19,8 @@ namespace Disboard
         internal IReadOnlyList<DisboardPlayer> Players { get; }
         internal Action<ChannelIdType> OnFinish { get; }
         internal Dispatcher Dispatcher { get; }
-        internal ConcurrentQueue<Task> MessageQueue { get; }
-        internal DisboardGameInitData(bool isDebug, DiscordChannel channel, IReadOnlyList<DisboardPlayer> players, Action<ChannelIdType> onFinish, Dispatcher dispatcher, ConcurrentQueue<Task> messageQueue)
+        internal ConcurrentQueue<Func<Task>> MessageQueue { get; }
+        internal DisboardGameInitData(bool isDebug, DiscordChannel channel, IReadOnlyList<DisboardPlayer> players, Action<ChannelIdType> onFinish, Dispatcher dispatcher, ConcurrentQueue<Func<Task>> messageQueue)
         {
             IsDebug = isDebug;
             Channel = channel;

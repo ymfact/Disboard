@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DSharpPlus.Entities;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -30,7 +31,7 @@ namespace Disboard
 
         internal bool IsDebug { get; }
         internal bool IsFinished { get; private set; } = false;
-        internal ConcurrentQueue<Task> MessageQueue { get; }
+        internal ConcurrentQueue<Func<Task>> MessageQueue { get; }
         internal Semaphore Semaphore { get; } = new Semaphore();
 
         /// <summary>
