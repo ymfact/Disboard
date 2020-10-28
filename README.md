@@ -27,7 +27,7 @@ class Program
 플레이어 간 공유되지 않는 내용은 DM을 활용하여 구현해야 합니다.
 
 봇을 실행하려면 토큰을 발급해야 합니다. https://discordpy.readthedocs.io/en/latest/discord.html 를 참고하세요.\
-또한, 토큰 발급 페이지 하단의 PRESENCE INTENT, SERVER MEMBERS INTENT 스위치를 켜야 합니다.
+또한, 토큰 발급 페이지 중간의 PRESENCE INTENT, SERVER MEMBERS INTENT 스위치를 켜야 합니다.
 
 <hr/>
 
