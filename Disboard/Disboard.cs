@@ -116,7 +116,7 @@ namespace Disboard
         async Task NewDebugGame(DiscordChannel discordChannel, int mockPlayerCount)
         {
             var messageQueue = new ConcurrentQueue<Task>();
-            var channel = new DisboardChannel(discordChannel, new ConcurrentQueue<Task>(), STADispatcher);
+            var channel = new DisboardChannel(discordChannel, messageQueue, STADispatcher);
             var mockPlayers = Enumerable.Range(0, mockPlayerCount).Select(_ => new MockPlayer(_, discordChannel.Guild.Owner, channel) as DisboardPlayer).ToList();
             foreach (var (index, player) in mockPlayers.Enumerate())
             {
