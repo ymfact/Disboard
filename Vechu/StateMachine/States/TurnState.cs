@@ -58,7 +58,7 @@ namespace Vechu
             var split = message.Split();
             if (split.Length != 2)
             {
-                ctx.Send(W($"리롤할 주사위를 입력하세요. 예시: R 1, R 66"));
+                ctx.Send(W($"리롤할 주사위를 입력하세요. 예시: R 4, R 66"));
                 return this;
             }
             try
@@ -79,7 +79,7 @@ namespace Vechu
             }
             catch (System.FormatException)
             {
-                ctx.Send(W($"리롤할 주사위를 다시 입력하세요. 예시: R 1, R 66"));
+                ctx.Send(W($"리롤할 주사위를 다시 입력하세요. 예시: R 4, R 66"));
                 return this;
             }
         }
