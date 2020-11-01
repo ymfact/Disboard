@@ -54,15 +54,21 @@ class Program
 
 IDisboardGameFactory를 구현하면 `BOT help` 명령어를 지원할 수 있습니다.
 
-#### Image from WPF Controls
-WPF 컨트롤을 사용하여 이미지를 그릴 수 있습니다. EchoVisual.cs를 예제로써 참고하세요.
+#### Embed
+디스코드 Embed를 사용할 수 있습니다.\
+BoardContext.cs의 GetBoardGrid를 예제로써 참고하세요.
 
-XAML으로 사용자 정의 컨트롤을 사용하려면 다음 작업을 통해 프로젝트가 WPF를 사용하도록 설정해야 합니다.\
-.NET Core 3.1 프로젝트를 기준으로는, csproj 파일에 `<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">`를 사용하고, `<PropertyGroup>` `</PropertyGroup>` 내부에 `<UseWPF>true</UseWPF>`를 추가합니다.
+https://leovoel.github.io/embed-visualizer/ 에서 embed를 미리 볼 수 있습니다.
 
 #### Disgrid
 Disgrid를 사용하면 텍스트로 이루어진 표를 간단히 만들 수 있습니다.\
 BoardContext.cs의 GetBoardGrid를 예제로써 참고하세요.
+
+#### Image from WPF Controls
+WPF 컨트롤을 사용하여 이미지를 그릴 수도 있습니다. EchoVisual.cs를 예제로써 참고하세요.
+
+XAML으로 사용자 정의 컨트롤을 사용하려면 다음 작업을 통해 프로젝트가 WPF를 사용하도록 설정해야 합니다.\
+.NET Core 3.1 프로젝트를 기준으로는, csproj 파일에 `<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">`를 사용하고, `<PropertyGroup>` `</PropertyGroup>` 내부에 `<UseWPF>true</UseWPF>`를 추가합니다.
 
 #### DM
 DisboardGameUsingDM을 상속하면 DM을 사용할 수 있습니다.\
@@ -72,7 +78,9 @@ DisboardGameUsingDM을 상속하면 DM을 사용할 수 있습니다.\
 
 #### Reaction
 OnGroupReaction 함수를 override하면 이모지 리액션 입력을 받을 수 있습니다.\
-보기를 제공하기 위해 메시지에 이모지를 포함시켜 보내세요. 플레이어의 이모지 클릭에 반응할 수 있게 됩니다.
+보기를 제공하기 위해 메시지에 이모지를 포함시켜 보내세요. 플레이어의 이모지 클릭에 반응할 수 있게 됩니다.\
+다만, 이모지 리액션은 매우 제한적인 기능이기 때문에, 텍스트 입력과 섞어 쓰는 것은 권장되지 않습니다.
+Emoji 함수로부터 이모지를 생성할 수 있습니다. 두 Emoji의 비교는 반드시 Name 속성을 비교해야 합니다.
 
 #### debug
 채널 주제(Topic)에 대소문자 무관 `debug`를 포함시키면 봇을 실행할 때마다 게임이 시작되며, `debug<인원 수>`를 포함시키면 해당 인원 수의 게임을 시뮬레이션합니다.\

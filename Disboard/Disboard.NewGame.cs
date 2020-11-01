@@ -12,7 +12,7 @@ namespace Disboard
         async Task NewDebugGame(DiscordChannel discordChannel, int mockPlayerCount)
         {
             var messageQueue = new ConcurrentQueue<Func<Task>>();
-            var channel = new DisboardChannel(Client, discordChannel, messageQueue, STADispatcher);
+            var channel = new DisboardChannel(discordChannel, messageQueue, STADispatcher);
             var mockPlayers = Enumerable.Range(0, mockPlayerCount).Select(_ => new MockPlayer(_, discordChannel.Guild.Owner, channel) as DisboardPlayer).ToList();
             foreach (var (index, player) in mockPlayers.Enumerate())
             {
@@ -39,7 +39,7 @@ namespace Disboard
             var members = channel.Guild.Members.Where(_ => userIds.Contains(_.Id));
             var dMChannels = await Task.WhenAll(members.Select(_ => _.CreateDmChannelAsync()));
             var messageQueue = new ConcurrentQueue<Func<Task>>();
-            var players = members.Zip(dMChannels).Select(_ => new RealPlayer(_.First, new DisboardChannel(Client, _.Second, messageQueue, STADispatcher)) as DisboardPlayer).OrderBy(_ => random.Next()).ToList();
+            var players = members.Zip(dMChannels).Select(_ => new RealPlayer(_.First, new DisboardChannel(_.Second, messageQueue, STADispatcher)) as DisboardPlayer).OrderBy(_ => random.Next()).ToList();
             foreach (var (index, player) in players.Enumerate())
             {
                 int nextPlayerIndex = (index == players.Count - 1) ? 0 : index + 1;
@@ -50,8 +50,8 @@ namespace Disboard
 
         async Task NewGame_(DiscordChannel channel, List<DisboardPlayer> players, ConcurrentQueue<Func<Task>> messageQueue, bool isDebug = false)
         {
-            var disboardChannel = new DisboardChannel(Client, channel, messageQueue, STADispatcher);
-            var gameInitializeData = new DisboardGameInitData(isDebug, disboardChannel, players, OnFinish, messageQueue);
+            var disboardChannel = new DisboardChannel(channel, messageQueue, STADispatcher);
+            var gameInitializeData = new DisboardGameInitData(isDebug, Client, disboardChannel, players, OnFinish, messageQueue);
             DisboardGame game = GameFactory.New(gameInitializeData);
 
             if (game.IsFinished)

@@ -23,7 +23,7 @@ namespace Disboard
     /// <param name="message">메시지를 작성할 수 있습니다.</param>
     /// <param name="embed">Discord embed를 포함할 수 있습니다. 메시지의 아래에 표시됩니다.</param>
     /// <param name="emoji">Discord emoji를 포함할 수 있습니다. 게시한 메시지에 봇이 리액션을 추가합니다. 너무 많을 경우 느려집니다.</param>
-    public delegate void SendType(string message, DiscordEmbed? embed = null, IEnumerable<string>? emoji = null);
+    public delegate void SendType(string message, DiscordEmbed? embed = null, IEnumerable<DiscordEmoji>? emoji = null);
     /// <summary>
     /// 한 장의 이미지를 전송합니다.
     /// </summary>
@@ -31,7 +31,7 @@ namespace Disboard
     /// <param name="message">메시지를 작성할 수 있습니다. 이미지의 위에 표시됩니다.</param>
     /// <param name="embed">Discord embed를 포함할 수 있습니다. 이미지의 아래에 표시됩니다.</param>
     /// <param name="emoji">Discord emoji를 포함할 수 있습니다. 게시한 메시지에 봇이 리액션을 추가합니다. 너무 많을 경우 느려집니다.</param>
-    public delegate void SendImageType(Stream stream, string? message = null, DiscordEmbed? embed = null, IEnumerable<string>? emoji = null);
+    public delegate void SendImageType(Stream stream, string? message = null, DiscordEmbed? embed = null, IEnumerable<DiscordEmoji>? emoji = null);
     /// <summary>
     /// 여러 장의 이미지를 전송합니다.
     /// </summary>
@@ -39,7 +39,7 @@ namespace Disboard
     /// <param name="message">메시지를 작성할 수 있습니다. 이미지의 위에 표시됩니다.</param>
     /// <param name="embed">Discord embed를 포함할 수 있습니다. 이미지의 아래에 표시됩니다.</param>
     /// <param name="emoji">Discord emoji를 포함할 수 있습니다. 게시한 메시지에 봇이 리액션을 추가합니다. 너무 많을 경우 느려집니다.</param>
-    public delegate void SendImagesType(IReadOnlyList<Stream> streams, string? message = null, DiscordEmbed? embed = null, IEnumerable<string>? emoji = null);
+    public delegate void SendImagesType(IReadOnlyList<Stream> streams, string? message = null, DiscordEmbed? embed = null, IEnumerable<DiscordEmoji>? emoji = null);
     /// <summary>
     /// WPF 컨트롤을 생성하고, 이미지를 그립니다.
     /// </summary>

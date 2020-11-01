@@ -18,6 +18,7 @@ namespace Disboard
         /// <param name="initData">게임 생성에 필요한 데이터입니다.</param>
         public DisboardGame(DisboardGameInitData initData)
         {
+            Client = initData.Client;
             IsDebug = initData.IsDebug;
             Channel = initData.Channel;
             InitialPlayers = initData.Players;
@@ -34,6 +35,7 @@ namespace Disboard
         internal bool IsFinished { get; private set; } = false;
         internal ConcurrentQueue<Func<Task>> MessageQueue { get; }
         internal Semaphore Semaphore { get; } = new Semaphore();
+        internal DiscordClient Client { get; }
 
         /// <summary>
         /// 게임이 생성된 그룹 채널입니다.
@@ -67,6 +69,15 @@ namespace Disboard
         /// WPF 컨트롤을 사용하여 이미지를 그릴 수 있습니다. EchoVisual.cs를 예제로써 참고하세요.
         /// </summary>
         public RenderType Render { get; }
+        /// <summary>
+        /// 텍스트를 이모지로 변환합니다.
+        /// </summary>
+        /// <param name="text">emote name that includes colons (eg. :thinking:),
+        /// skin tone variations (eg. :ok_hand::skin-tone-2:),
+        /// standard emoticons (eg. :D),
+        /// guild emoji (still specified by :name:),
+        /// emoji object from a unicode entity를 지원합니다.</param>
+        public DiscordEmoji Emoji(string text) => text.ToEmoji(Client);
         /// <summary>
         /// 그룹 채널에서 플레이어의 메시지가 작성되면 호출됩니다.
         /// </summary>

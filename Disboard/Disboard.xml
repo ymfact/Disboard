@@ -84,11 +84,10 @@
             WPF 컨트롤을 사용하여 이미지를 그릴 수 있습니다. EchoVisual.cs를 예제로써 참고하세요.
             </summary>
         </member>
-        <member name="M:Disboard.DisboardChannel.#ctor(DSharpPlus.DiscordClient,DSharpPlus.Entities.DiscordChannel,System.Collections.Concurrent.ConcurrentQueue{System.Func{System.Threading.Tasks.Task}},System.Windows.Threading.Dispatcher)">
+        <member name="M:Disboard.DisboardChannel.#ctor(DSharpPlus.Entities.DiscordChannel,System.Collections.Concurrent.ConcurrentQueue{System.Func{System.Threading.Tasks.Task}},System.Windows.Threading.Dispatcher)">
             <summary>
             디스코드 채널입니다. 그룹 채널일 수도, DM 채널일 수도 있습니다.
             </summary>
-            <param name="client">디스코드 클라이언트가 필요합니다.</param>
             <param name="channel">그룹 채널일 수도, DM 채널일 수도 있습니다.</param>
             <param name="messageQueue">메시지 큐에 태스크를 넣으면 메시지를 전송할 수 있습니다.</param>
             <param name="dispatcher">WPF 컨트롤을 다루기 위해 메인 스레드의 디스패쳐가 필요합니다.</param>
@@ -143,6 +142,16 @@
             <summary>
             WPF 컨트롤을 사용하여 이미지를 그릴 수 있습니다. EchoVisual.cs를 예제로써 참고하세요.
             </summary>
+        </member>
+        <member name="M:Disboard.DisboardGame.Emoji(System.String)">
+            <summary>
+            텍스트를 이모지로 변환합니다.
+            </summary>
+            <param name="text">emote name that includes colons (eg. :thinking:),
+            skin tone variations (eg. :ok_hand::skin-tone-2:),
+            standard emoticons (eg. :D),
+            guild emoji (still specified by :name:),
+            emoji object from a unicode entity를 지원합니다.</param>
         </member>
         <member name="M:Disboard.DisboardGame.OnGroup(Disboard.DisboardPlayer,System.String)">
             <summary>
