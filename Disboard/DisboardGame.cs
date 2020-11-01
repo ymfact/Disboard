@@ -1,4 +1,6 @@
-﻿using System;
+﻿using DSharpPlus;
+using DSharpPlus.Entities;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -17,7 +19,7 @@ namespace Disboard
         public DisboardGame(DisboardGameInitData initData)
         {
             IsDebug = initData.IsDebug;
-            Channel = new DisboardChannel(initData.Channel, initData.MessageQueue, initData.Dispatcher);
+            Channel = initData.Channel;
             InitialPlayers = initData.Players;
             MessageQueue = initData.MessageQueue;
             Render = Channel.Render;
@@ -75,5 +77,11 @@ namespace Disboard
         /// 매 0.1초마다 호출됩니다. 호출 간격은 정확하지 않습니다.
         /// </summary>
         public virtual void OnTick() { }
+        /// <summary>
+        /// 그룹 채널에서 플레이어가 봇의 메시지에 리액션을 추가할 때 호출됩니다. 
+        /// </summary>
+        /// <param name="player">리액션을 추가한 플레이어입니다. 반드시 게임에 참여하고 있습니다.</param>
+        /// <param name="emoji">플레이어가 추가한 이모지입니다.</param>
+        public virtual void OnGroupReaction(DisboardPlayer player, DiscordEmoji emoji) { }
     }
 }

@@ -53,6 +53,59 @@ namespace Disboard
             return Task.CompletedTask;
         }
 
+        async Task MessageReactionAdded(MessageReactionAddEventArgs __)
+        {
+            if (!IsInitialized)
+                return;
+
+            var channel = __.Channel;
+            var user = __.User;
+            var userId = __.User.Id;
+            var message = __.Message;
+            var emoji = __.Emoji;
+            if (user.IsCurrent)
+            {
+                return;
+            }
+            if (message.MessageType != MessageType.Default)
+            {
+                return;
+            }
+            if (false == message.Author.IsCurrent)
+            {
+                return;
+            }
+
+            if (channel.Type == ChannelType.Private)
+            {
+                var game = GamesByUsers.GetValueOrDefault(userId);
+                if (game is DisboardGameUsingDM)
+                {
+                    var player = game.InitialPlayers.Where(_ => _.Id == userId).FirstOrDefault();
+                    if (player != null)
+                    {
+                        await OnDMReaction(game, player, emoji);
+                    }
+                }
+                else
+                {
+                    await channel.SendMessageAsync("`진행중인 게임이 없습니다.`");
+                }
+            }
+            else if (channel.Type == ChannelType.Text)
+            {
+                var game = Games.GetValueOrDefault(channel.Id);
+                if (game != null)
+                {
+                    var player = game.InitialPlayers.Where(_ => _.Id == userId).FirstOrDefault();
+                    if (player != null)
+                    {
+                        await OnGroupReaction(game, player, emoji);
+                    }
+                }
+            }
+        }
+
         Task Ready(ReadyEventArgs _)
         {
             if (IsInitialized)
@@ -137,7 +190,6 @@ namespace Disboard
             }
             else if (channel.Type == ChannelType.Text)
             {
-                var guild = __.Guild;
                 var game = Games.GetValueOrDefault(channel.Id);
                 var split = content.Split(" ").ToList();
                 if (split.Count > 0 && split[0].ToLower() == "bot")

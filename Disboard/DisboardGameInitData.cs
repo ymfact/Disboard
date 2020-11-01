@@ -1,4 +1,5 @@
-﻿using DSharpPlus.Entities;
+﻿using DSharpPlus;
+using DSharpPlus.Entities;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -15,18 +16,16 @@ namespace Disboard
     public sealed class DisboardGameInitData
     {
         internal bool IsDebug { get; }
-        internal DiscordChannel Channel { get; }
+        internal DisboardChannel Channel { get; }
         internal IReadOnlyList<DisboardPlayer> Players { get; }
         internal Action<ChannelIdType> OnFinish { get; }
-        internal Dispatcher Dispatcher { get; }
         internal ConcurrentQueue<Func<Task>> MessageQueue { get; }
-        internal DisboardGameInitData(bool isDebug, DiscordChannel channel, IReadOnlyList<DisboardPlayer> players, Action<ChannelIdType> onFinish, Dispatcher dispatcher, ConcurrentQueue<Func<Task>> messageQueue)
+        internal DisboardGameInitData(bool isDebug, DisboardChannel channel, IReadOnlyList<DisboardPlayer> players, Action<ChannelIdType> onFinish, ConcurrentQueue<Func<Task>> messageQueue)
         {
             IsDebug = isDebug;
             Channel = channel;
             Players = players;
             OnFinish = onFinish;
-            Dispatcher = dispatcher;
             MessageQueue = messageQueue;
         }
     }

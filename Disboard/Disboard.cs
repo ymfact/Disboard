@@ -22,21 +22,24 @@ namespace Disboard
     /// </summary>
     /// <param name="message">메시지를 작성할 수 있습니다.</param>
     /// <param name="embed">Discord embed를 포함할 수 있습니다. 메시지의 아래에 표시됩니다.</param>
-    public delegate void SendType(string message, DiscordEmbed? embed = null);
+    /// <param name="emoji">Discord emoji를 포함할 수 있습니다. 게시한 메시지에 봇이 리액션을 추가합니다. 너무 많을 경우 느려집니다.</param>
+    public delegate void SendType(string message, DiscordEmbed? embed = null, IEnumerable<string>? emoji = null);
     /// <summary>
     /// 한 장의 이미지를 전송합니다.
     /// </summary>
     /// <param name="stream">이미지를 포함하는 스트림입니다. Render 함수를 이용해서 생성할 수 있습니다.</param>
     /// <param name="message">메시지를 작성할 수 있습니다. 이미지의 위에 표시됩니다.</param>
     /// <param name="embed">Discord embed를 포함할 수 있습니다. 이미지의 아래에 표시됩니다.</param>
-    public delegate void SendImageType(Stream stream, string? message = null, DiscordEmbed? embed = null);
+    /// <param name="emoji">Discord emoji를 포함할 수 있습니다. 게시한 메시지에 봇이 리액션을 추가합니다. 너무 많을 경우 느려집니다.</param>
+    public delegate void SendImageType(Stream stream, string? message = null, DiscordEmbed? embed = null, IEnumerable<string>? emoji = null);
     /// <summary>
     /// 여러 장의 이미지를 전송합니다.
     /// </summary>
     /// <param name="streams">이미지를 포함하는 스트림입니다. Render 함수를 이용해서 생성할 수 있습니다.</param>
     /// <param name="message">메시지를 작성할 수 있습니다. 이미지의 위에 표시됩니다.</param>
     /// <param name="embed">Discord embed를 포함할 수 있습니다. 이미지의 아래에 표시됩니다.</param>
-    public delegate void SendImagesType(IReadOnlyList<Stream> streams, string? message = null, DiscordEmbed? embed = null);
+    /// <param name="emoji">Discord emoji를 포함할 수 있습니다. 게시한 메시지에 봇이 리액션을 추가합니다. 너무 많을 경우 느려집니다.</param>
+    public delegate void SendImagesType(IReadOnlyList<Stream> streams, string? message = null, DiscordEmbed? embed = null, IEnumerable<string>? emoji = null);
     /// <summary>
     /// WPF 컨트롤을 생성하고, 이미지를 그립니다.
     /// </summary>
@@ -57,6 +60,7 @@ namespace Disboard
         ConcurrentDictionary<ChannelIdType, DisboardGame> Games { get; } = new ConcurrentDictionary<ChannelIdType, DisboardGame>();
         Dictionary<UserIdType, DisboardGameUsingDM> GamesByUsers { get; } = new Dictionary<UserIdType, DisboardGameUsingDM>();
         DispatcherTimer? TickTimer { get; set; } = null;
+        DiscordClient Client { get; set; } = null!;
 
         /// <summary>
         /// Disboard를 생성합니다.
@@ -79,21 +83,22 @@ namespace Disboard
         /// <param name="token">디스코드 홈페이지에서 토큰을 발급해야 합니다.</param>
         public void Run(string token)
         {
-            DiscordClient discord = new DiscordClient(new DiscordConfiguration
+            Client = new DiscordClient(new DiscordConfiguration
             {
                 Token = token,
                 TokenType = TokenType.Bot
             });
-            discord.DebugLogger.LogMessageReceived += LogMessageReceived;
-            discord.Ready += Ready;
-            discord.GuildCreated += GuildCreated;
-            discord.GuildDeleted += GuildDeleted;
-            discord.GuildMemberAdded += GuildMemberAdded;
-            discord.MessageCreated += MessageCreated;
-            discord.GuildMemberUpdated += GuildMemberUpdated;
-            discord.UserUpdated += UserUpdated;
+            Client.DebugLogger.LogMessageReceived += LogMessageReceived;
+            Client.Ready += Ready;
+            Client.GuildCreated += GuildCreated;
+            Client.GuildDeleted += GuildDeleted;
+            Client.GuildMemberAdded += GuildMemberAdded;
+            Client.MessageCreated += MessageCreated;
+            Client.GuildMemberUpdated += GuildMemberUpdated;
+            Client.UserUpdated += UserUpdated;
+            Client.MessageReactionAdded += MessageReactionAdded;
 
-            discord.ConnectAsync().GetAwaiter().GetResult();
+            Client.ConnectAsync().GetAwaiter().GetResult();
         }
 
         void OnFinish(ChannelIdType channelId)

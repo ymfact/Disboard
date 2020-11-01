@@ -1,4 +1,6 @@
-﻿namespace Disboard
+﻿using DSharpPlus.Entities;
+
+namespace Disboard
 {
     /// <summary>
     /// 게임이 플레이어의 DM을 받기를 원할 때 DisboardGame 대신 사용합니다.
@@ -16,5 +18,11 @@
         /// <param name="author">DM을 작성한 플레이어입니다. 반드시 게임에 참여하고 있습니다.</param>
         /// <param name="message">플레이어가 작성한 DM의 내용입니다.</param>
         public abstract void OnDM(DisboardPlayer author, string message);
+        /// <summary>
+        /// DM 채널에서 플레이어가 봇의 메시지에 리액션을 추가할 때 호출됩니다. 
+        /// </summary>
+        /// <param name="player">리액션을 추가한 플레이어입니다. 반드시 게임에 참여하고 있습니다.</param>
+        /// <param name="emoji">플레이어가 추가한 이모지입니다.</param>
+        public virtual void OnDMReaction(DisboardPlayer player, DiscordEmoji emoji) { }
     }
 }

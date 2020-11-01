@@ -67,7 +67,7 @@ namespace Disboard
                 }
 
                 var messageQueue = new ConcurrentQueue<Func<Task>>();
-                void task() => GameFactory.OnHelp(new DisboardChannel(channel, messageQueue, STADispatcher));
+                void task() => GameFactory.OnHelp(new DisboardChannel(Client, channel, messageQueue, STADispatcher));
                 await RunAndProcessMessage(task, messageQueue);
             }
             else if (split.Count > 1 && split[1].ToLower() == "restoredm")
@@ -145,6 +145,26 @@ namespace Disboard
                 }
             }
             await RunInLockAndProcessMessage(game, () => game.OnGroup(player, content));
+        }
+
+        async Task OnDMReaction(DisboardGameUsingDM game, DisboardPlayer player, DiscordEmoji emoji)
+        {
+            Action task;
+            if (game.IsDebug)
+                task = () => game.Channel.Send("`인원을 시뮬레이션 할 때에는 리액션이 지원되지 않습니다.`");
+            else
+                task = () => game.OnDMReaction(player, emoji);
+            await RunInLockAndProcessMessage(game, task);
+        }
+
+        async Task OnGroupReaction(DisboardGame game, DisboardPlayer player, DiscordEmoji emoji)
+        {
+            Action task;
+            if (game.IsDebug)
+                task = () => game.Channel.Send("`인원을 시뮬레이션 할 때에는 리액션이 지원되지 않습니다.`");
+            else
+                task = () => game.OnGroupReaction(player, emoji);
+            await RunInLockAndProcessMessage(game, task);
         }
     }
 }
