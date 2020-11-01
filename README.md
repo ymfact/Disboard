@@ -43,6 +43,8 @@ class Program
 
 <hr/>
 
+![game play example: Vechu](GithubResource/Vechu.png)
+
 #### Game
 게임에 참가하는 인원은 게임 시작 후 변경할 수 없습니다.\
 게임에 참가하지 않는 유저는 `BOT restart` 명령어 외에는 게임에 영향을 주지 않습니다.
